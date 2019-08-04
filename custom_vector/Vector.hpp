@@ -27,13 +27,9 @@ public:
 
   pointer allocate(std::size_t n)
   {
-   // std::cout<<"allocating: "<<n*sizeof(value_type)<<std::endl;
     return static_cast<pointer>(::operator new(n * sizeof(value_type)));
-   //pointer ret =  static_cast<pointer>(::operator new(n*sizeof(T)));
-   // std::cerr << " allocated at: " << (void*)ret << std::endl;
-   // return ret;
-    //return new T[n];
   }
+
   void deallocate(value_type *p, std::size_t) noexcept
   {
     ::operator delete(p);
@@ -42,8 +38,9 @@ public:
   template <class U, class... Args>
   void construct(U *p, Args &&... args)
   {
-    //std::cout<<"construct "<<std::endl;
+  //  std::cout<<"construct"<<std::endl;
     ::new (p) U(std::forward<Args>(args)...);
+  //  std::cout<<"construct end"<<std::endl;
   }
 };
 
@@ -107,7 +104,6 @@ public:
 
   Vector()
   {
-   // std::cout << "default constructor" << std::endl;
   };
 
   Vector( uint32_t count, const T& value, const Alloc& allocator = Alloc())
@@ -154,10 +150,8 @@ public:
   ~Vector()
   {
     a.deallocate(buffer,m_reservedSize);
-    //delete[] buffer;
   }
 
-  //Element access
   T &at(uint32_t position) 
   { 
     if(position>=m_size)
@@ -174,6 +168,7 @@ public:
     }
     return buffer[position]; 
   };
+
   T &front() { return buffer[0]; };
   const T &front() const { return buffer[0]; };
   T &back() { return buffer[m_size - 1]; };
@@ -247,11 +242,15 @@ public:
   /*
     Inserts TODO: exceptions
 */
+// TODO: Shifting content takes to much time. It would be great to merge shifting with reallocation of arrays when realocation occurs (checkMemory method). 
   iterator insert(const_iterator pos, const T &value)
   {
+   // std::cout<<"insert begin &"<<std::endl;
     uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
+   // std::cout<<"check memory"<<std::endl;
     checkMemory();
-    shiftContent(pos,1);
+   // std::cout<<"check memory"<<std::endl;
+    shiftContent(position,1);
     insertToBuffer(position, value);
     m_size++;
     return iterator(buffer + position);
@@ -263,8 +262,6 @@ public:
     shiftContent(position, count);
     for (int i = position; i <= (position + count) - 1; i++)
     {
-     // std::cout << "filling: " << i << "with value: " << value << std::endl;
-      //buffer[i] = value;
       insertToBuffer(i, value);
       m_size++;
     }
@@ -272,6 +269,7 @@ public:
 
   iterator insert(const_iterator pos, T &&value)
   {
+    //std::cout<<"insert begin &&"<<std::endl;
     return emplace(pos, std::move(value));
   }
 
@@ -284,7 +282,6 @@ public:
     uint32_t startInsertPosition = position;
     for (auto x : ilist)
     {
-      //buffer[startInsertPosition] = x;
       insertToBuffer(startInsertPosition, x);
       startInsertPosition++;
     }
@@ -301,8 +298,7 @@ public:
 
     for(auto  i = first; i!=last; i++)
     {
-      //std::cout<<"element: "<< (*i) << "inserting to pos: "<<position<<std::endl;
-      buffer[position] = (*i);
+      insertToBuffer(position, (*i));
       position++;
     }
 
@@ -311,12 +307,15 @@ public:
   template <class... Args>
   iterator emplace(const_iterator pos, Args &&... args)
   {
+   // std::cout<<"emplace && begin"<<std::endl;
     uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
+   //     std::cout<<"check memory"<<std::endl;
     checkMemory();
-    //std::cout<<"shifting"<<std::endl;
+   //     std::cout<<"shift content"<<std::endl;
     shiftContent(position, 1);
-   // std::cout<<"constructing"<<std::endl;
-    a.construct(buffer+position, args...);
+   //     std::cout<<"aaaand construct"<<std::endl;
+    a.construct(buffer+position,std::forward<Args>(args)...);
+   //     std::cout<<"increment"<<std::endl;
     m_size++;
     return iterator(buffer+position);
   }
@@ -325,12 +324,9 @@ public:
   T& emplace_back(Args &&... args)
   {
     checkMemory();
-
     a.construct(buffer+m_size, args...);
-   // ::new (buffer+m_size) T(std::forward<Args>(args)...);
     m_size++;
     return back();
-    //push_back(std::move(a.construct<T>(args)))
   }
 
   void erase(const_iterator pos);
@@ -340,20 +336,10 @@ public:
   {
     std::cout<<"&"<<std::endl;
     checkMemory();
-  /*   if(isTrivial)
-    {
-     buffer[m_size++] = object;
-    }
-    else
-    {
-      a.construct(buffer+m_size++, object);
-    }*/
-    
-   insertToBuffer(m_size, object);
-   m_size++;
-    
-
+    insertToBuffer(m_size, object);
+    m_size++;
   };
+
   void push_back(T &&object)
   {
     emplace_back(std::move(object));
@@ -387,9 +373,8 @@ public:
   Vector<T> &operator=(std::initializer_list<T> ilist); // replace with initializer list
 
 private:
-  void insertToBuffer(uint32_t& position, T& value)
+  void insertToBuffer(uint32_t& position, const T& value)
   {
-   // std::cout<<" insert to buffer &"<<std::endl;
     if(isTrivial)
     {
       buffer[position] = value;
@@ -402,14 +387,12 @@ private:
 
   void insertToBuffer(uint32_t& position, T&& value)
   {
-   // std::cout<<" insert to buffer &&"<<std::endl;
     if(isTrivial)
     {
       buffer[position] = std::move(value);
     }
     else
     {
-      //std::cout<<"construct in &&"<<std::endl;
       a.construct(buffer+position, std::move(value));
     }
     
@@ -418,14 +401,11 @@ private:
   {
     for (uint32_t i = (m_size + elementCount) - 1; i >= pos + elementCount; i--)
     {
-      //std::cout<<"shift shift srutututu"<<std::endl;
       insertToBuffer(i, buffer[i - elementCount] );
-     // buffer[i] = buffer[i - elementCount];
     }
   }
  bool checkMemory(uint32_t requiredSpace)
   {
-   // std::cout << "check available memory" << std::endl;
     if (m_size + requiredSpace > m_reservedSize)
     {
      reallocate_memory([=]()->uint32_t {
@@ -435,7 +415,6 @@ private:
          retMem *= 2;
        }
        return retMem;
-       //return m_reservedSize == 0 ? 1 : m_reservedSize*2;
      }());
     return true;
     }
@@ -447,21 +426,9 @@ private:
     return checkMemory(1);
   }
 
-  /*
-    1) void construct(U *p, Args &&... args)
-    2) tmp[i] = buffer[i];
-    3) buffer[i] = buffer[i - elementCount];
-    4) 
-   */
-  //void tmp[i] = buffer[i];
   void reallocate_memory(uint32_t newSize)
   {
-    //a.allocate(5);
-  //  std::cout << "memory reallocation to size: " << newSize <<" m_size = "<<m_size<<" m_reservedSize: "<<m_reservedSize<<"buffer: "<<sizeof(buffer)<<std::endl;
-  //  std::cout<< "size of T: "<<sizeof(T)<<std::endl;
     T *tmp = a.allocate(newSize);
-  //  std::cout << "realocated"<<std::endl;
-    //uint32_t copyRange = m_reservedSize;
     if (newSize < m_reservedSize)
     {
       if (newSize < m_size)
@@ -471,7 +438,6 @@ private:
     }
     if (m_size > 0)
     {
-    //memcpy( (void*)tmp, (void*)buffer, (m_size-1) * sizeof(T) );
      for (int i = 0; i < m_size; i++)
       {
         if(isTrivial)
@@ -481,21 +447,13 @@ private:
         else
         {
           a.construct(tmp+i, buffer[i]);
-        }
-        
-        //TODO: SFINAE dla trywialnie konstruowanych  tak zeby tylko kopiowalo
-       
+        }        
+        //TODO: SFINAE
       }
-      
-
       a.deallocate(buffer, m_reservedSize);
     }
- //   std::cout << "replacing arrays"<<std::endl;
     buffer = tmp;
- //   std::cout << "all good"<<std::endl;
     m_reservedSize = newSize;
- //   std::cout << "end of reallocate memory"<<std::endl;
-
   };
 
   Alloc a;

@@ -22,8 +22,9 @@ public:
     {
         text = z;
     }
-      test(const test& other)
+    test(const test& other)
     {
+      //  std::cout << "czemu kurwa to jest wywolywane" <<std::endl;
         text = other.text;
     }
    void print()
@@ -72,7 +73,22 @@ void testContainerInsert(U container, std::string type, int elements = 10000)
 
     for (int i = 0; i < elements; i++)
     {
-        container.insert(container.begin(), test(1,2,"test123"));
+        container.insert(container.cbegin(), test(1,2,"test123"));
+    }
+
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<long double> elapsed_seconds = end - start;
+    std::cout << "Typ: " << type << "\t probka: " << elements << "\t\t time:" << elapsed_seconds.count() << "\n";
+}
+
+template <class U>
+void testContainerInsertInt(U container, std::string type, int elements = 10000)
+{
+    auto start = std::chrono::system_clock::now();
+
+    for (int i = 0; i < elements; i++)
+    {
+        container.insert(container.cbegin(), i);
     }
 
     auto end = std::chrono::system_clock::now();
@@ -102,8 +118,8 @@ int main()
 
     std::vector<test> vv;
     Vector<test> v;
-    std::vector<test> emplaceA;
-    Vector<test> emplaceB;
+    std::vector<int> emplaceA;
+    Vector<int> emplaceB;
     //std::vector<trywialna> ii;
    // Vector<trywialna> iii;
 
@@ -127,10 +143,17 @@ int main()
     v.push_back(test(1,2,"555"));
 }*/
 
-for(int i =1; i<100000; i*=2)
+/*for(int i =1; i<20000; i*=2)
 {
     testContainerInsert(vv, "A\t",i);
     testContainerInsert(v, "B\t",i);
+
+}*/
+
+for(int i =1; i<40000; i*=2)
+{
+    testContainerInsertInt(emplaceA, "A\t",i);
+    testContainerInsertInt(emplaceB, "B\t",i);
 
 }
 
