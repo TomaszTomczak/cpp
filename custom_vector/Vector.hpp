@@ -147,7 +147,12 @@ public:
   Vector(InputIt first, InputIt last, const Alloc& alloc = Alloc());
   ~Vector()
   {
-    a.deallocate(buffer,m_reservedSize);
+   // delete [] buffer;
+   if(m_size>0)
+   {
+     a.deallocate(buffer,m_reservedSize);
+   }
+    
   }
 
   T &at(uint32_t position) 
@@ -306,15 +311,10 @@ public:
   template <class... Args>
   iterator emplace(const_iterator pos, Args &&... args)
   {
-   // std::cout<<"emplace && begin"<<std::endl;
     uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
-   //     std::cout<<"check memory"<<std::endl;
     checkMemory();
-   //     std::cout<<"shift content"<<std::endl;
     shiftContent(position, 1);
-   //     std::cout<<"aaaand construct"<<std::endl;
     a.construct(buffer+position,std::forward<Args>(args)...);
-   //     std::cout<<"increment"<<std::endl;
     m_size++;
     return iterator(buffer+position);
   }
