@@ -157,6 +157,35 @@ for(int i =1; i<40000; i*=2)
 
 }
 
+for(int i = 0; i< 100; i++)
+{
+emplaceB.push_back(std::move(i));
+}
+
+
+
+emplaceB.insert(emplaceB.cbegin(),555);
+emplaceB.insert(emplaceB.cbegin(),666);
+emplaceB.insert(emplaceB.cbegin(),777);
+emplaceB.insert(emplaceB.cbegin(),888);
+emplaceB.insert(emplaceB.cbegin(),999);
+
+for(auto x : emplaceB)
+{
+    std::cout<<x<<std::endl;
+}
+
+Vector<int>::const_iterator xxx(&emplaceB[10]);
+
+emplaceB.insert(xxx,555555555);
+
+for(auto x : emplaceB)
+{
+    std::cout<<x<<", ";
+}
+std::cout<<std::endl;
+
+
 /*Vector<test>::const_iterator x(&v[100]);
 v.insert(x,test(1,1,"234"));
 v.insert(x,test(1,1,"234"));

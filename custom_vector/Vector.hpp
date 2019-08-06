@@ -38,9 +38,7 @@ public:
   template <class U, class... Args>
   void construct(U *p, Args &&... args)
   {
-  //  std::cout<<"construct"<<std::endl;
     ::new (p) U(std::forward<Args>(args)...);
-  //  std::cout<<"construct end"<<std::endl;
   }
 };
 
@@ -242,7 +240,7 @@ public:
   /*
     Inserts TODO: exceptions
 */
-// TODO: Shifting content takes to much time. It would be great to merge shifting with reallocation of arrays when realocation occurs (checkMemory method). 
+// TODO: Handle inserting aout of range <begin(),m_size) -> throw exception
   iterator insert(const_iterator pos, const T &value)
   {
    // std::cout<<"insert begin &"<<std::endl;
@@ -251,6 +249,7 @@ public:
     checkMemory();
    // std::cout<<"check memory"<<std::endl;
     shiftContent(position,1);
+    //checkMemoryForShifting(1,position);
     insertToBuffer(position, value);
     m_size++;
     return iterator(buffer + position);
@@ -334,7 +333,6 @@ public:
 
   void push_back(const T &object)
   {
-    std::cout<<"&"<<std::endl;
     checkMemory();
     insertToBuffer(m_size, object);
     m_size++;
@@ -397,14 +395,13 @@ private:
     }
     
   }
-  void shiftContent(uint32_t pos, uint32_t elementCount)
+
+ void shiftContent(uint32_t position, uint32_t elementCount)
   {
-    for (uint32_t i = (m_size + elementCount) - 1; i >= pos + elementCount; i--)
-    {
-      insertToBuffer(i, buffer[i - elementCount] );
-    }
+    memmove(buffer + position + elementCount, buffer + position, (m_size-position) * sizeof(T));  
   }
- bool checkMemory(uint32_t requiredSpace)
+
+  bool checkMemory(uint32_t requiredSpace)
   {
     if (m_size + requiredSpace > m_reservedSize)
     {
@@ -429,6 +426,7 @@ private:
   void reallocate_memory(uint32_t newSize)
   {
     T *tmp = a.allocate(newSize);
+    uint32_t gap = 0;
     if (newSize < m_reservedSize)
     {
       if (newSize < m_size)
@@ -438,19 +436,35 @@ private:
     }
     if (m_size > 0)
     {
-     for (int i = 0; i < m_size; i++)
+     /*for (int i = 0; i < m_size; i++)
       {
+        if(gapSize != 0 && position - 1 == i)
+        {
+          gap = gapSize;
+        }
         if(isTrivial)
         {
-          tmp[i] = buffer[i];
+         // tmp[i+gap] = buffer[i];
+         memmove(dst, src, n*sizeof(value_type));
+
+        // memmove(&arr[0], &arr[1], sizeof(arr) - sizeof(*arr));
         }
         else
         {
-          a.construct(tmp+i, buffer[i]);
+          a.construct(tmp+i+gap, buffer[i]);
         }        
         //TODO: SFINAE
-      }
+      }*/
+      
+        memmove(tmp, buffer, m_size*sizeof(T));
+        a.deallocate(buffer, m_reservedSize);
+
+     /* std::cout<<"memmove 1: m_size - position"<<m_size-position<<std::endl;
+      memmove(tmp, buffer, (position - 1) * sizeof(T));
+      std::cout<<"memmove 2; to position: "<<position+gap<<std::endl;
+      memmove(tmp + position + gap, buffer + position, (m_size-position)*sizeof(T));
       a.deallocate(buffer, m_reservedSize);
+      */
     }
     buffer = tmp;
     m_reservedSize = newSize;
