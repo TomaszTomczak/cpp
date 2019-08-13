@@ -6,7 +6,6 @@
 #include <memory>
 #include <stdexcept>
 #include <cstring>
-	
 
 template <typename T>
 class allocator
@@ -20,14 +19,28 @@ public:
   typedef const T &const_reference;
   typedef T value_type;
 
-  template <class U> struct rebind {typedef allocator<U> other;};
+  template <class U>
+  struct rebind
+  {
+    typedef allocator<U> other;
+  };
   allocator() noexcept {}
   template <class U>
   allocator(allocator<U> const &) noexcept {}
 
   pointer allocate(std::size_t n)
   {
-    return static_cast<pointer>(::operator new(n * sizeof(value_type)));
+    pointer buff;
+    try
+    {
+      buff = static_cast<pointer>(::operator new(n * sizeof(value_type)));
+    }
+    catch(const std::exception& e)
+    {
+      std::cout << "###########" <<e.what() << '\n';
+    }
+    
+    return buff;
   }
 
   void deallocate(value_type *p, std::size_t) noexcept
@@ -38,6 +51,7 @@ public:
   template <class U, class... Args>
   void construct(U *p, Args &&... args)
   {
+    //std::cout << "new element will be placed at address: " << static_cast<void *>(p) << std::endl;
     ::new (p) U(std::forward<Args>(args)...);
   }
 };
@@ -46,7 +60,6 @@ template <typename T, typename Alloc = allocator<T>>
 class Vector
 {
 public:
-
   template <bool isConst>
   class iteratorBase
   {
@@ -56,35 +69,51 @@ public:
     typedef T value_type;
     typedef std::conditional_t<isConst, const T &, T &> reference;
     typedef std::conditional_t<isConst, const T *, T *> pointer;
-    typedef std::random_access_iterator_tag iterator_category;
+    typedef std::forward_iterator_tag iterator_category;
     typedef int difference_type;
 
     //ctors
     iteratorBase(pointer ptr) : ptr_(ptr) {}
     template <bool WasConst, class = std::enable_if_t<isConst && !WasConst>>
-    iteratorBase(const iteratorBase<WasConst> &rhs) : ptr_(rhs.ptr_) { /*std::cout << "conversion to const" << std::endl;*/ };
+    iteratorBase(const iteratorBase<WasConst> &rhs) : ptr_(rhs.ptr_){/*std::cout << "conversion to const" << std::endl;*/};
     iteratorBase() {}
 
     // operators
-    ptrdiff_t operator-(const iteratorBase &it) { return ptr_ - it.ptr_; }
+    ptrdiff_t operator-(const iteratorBase &it)
+    {
+      //std::cout << "ptrdiff" << std::endl;
+      return ptr_ - it.ptr_;
+    }
     self_type operator++()
     {
+     // std::cout << "i++ in iterator" << std::endl;
       self_type i = *this;
       ptr_++;
+      //std::cout << "++ pointer value: " << static_cast<const void *>(ptr_) << std::endl;
       return i;
     }
     self_type operator++(int junk)
     {
+      //std::cout << "++itertor" << std::endl;
       ptr_++;
       return *this;
     }
     self_type operator=(const self_type &other)
     {
+      //std::cout << "operator =" << std::endl;
       ptr_ = other.ptr_;
       return *this;
     }
-    pointer operator->() { return ptr_; }
-    reference operator*() { return *ptr_; }
+    pointer operator->()
+    {
+      //std::cout << "wyluskanie" << std::endl;
+      return ptr_;
+    }
+    reference operator*()
+    {
+      //std::cout << "dereferencja, pointer address: " << static_cast<void *>(ptr_) << std::endl;
+      return *ptr_;
+    }
     bool operator==(const self_type &rhs) { return ptr_ == rhs.ptr_; }
     bool operator!=(const self_type &rhs) { return ptr_ != rhs.ptr_; }
 
@@ -100,21 +129,19 @@ public:
   {
   };
 
-  Vector()
-  {
-  };
+  Vector(){};
 
-  Vector( uint32_t count, const T& value, const Alloc& allocator = Alloc())
+  Vector(uint32_t count, const T &value, const Alloc &allocator = Alloc())
   {
     a = allocator;
     buffer = a.allocate(count);
-    for(int i = 0; i<=count; i++)
+    for (int i = 0; i <= count; i++)
     {
       push_back(value);
     }
   }
 
-  Vector(std::initializer_list<T> ilist, const Alloc& allocator = Alloc()) //TODO: update to handle allocator
+  Vector(std::initializer_list<T> ilist, const Alloc &allocator = Alloc()) //TODO: update to handle allocator
   {
     a = allocator;
     m_reservedSize = static_cast<int>(ilist.size());
@@ -123,53 +150,52 @@ public:
       push_back(x);
     }
   }
-  explicit Vector( const Alloc& alloc ) noexcept
+  explicit Vector(const Alloc &alloc) noexcept
   {
     a = alloc;
   }
-  explicit Vector( uint32_t count, const Alloc& alloc = Alloc() );
-  Vector( const Vector& other )
+  explicit Vector(uint32_t count, const Alloc &alloc = Alloc());
+  Vector(const Vector &other)
   {
-      a = other.a;
-      m_size= other.m_size;
-      m_reservedSize = other.m_reservedSize;
-      buffer = a.allocate(m_reservedSize);
+    a = other.a;
+    m_size = other.m_size;
+    m_reservedSize = other.m_reservedSize;
+    buffer = a.allocate(m_reservedSize);
 
-      for(int i=0; i<m_size; i++)
-      {
-        buffer[i] = other.buffer[i];
-      }
+    for (int i = 0; i < m_size; i++)
+    {
+      buffer[i] = other.buffer[i];
+    }
   }
   //Vector( const Vector& other, const Alloc& alloc);
-  Vector(Vector&& other) noexcept;
+  Vector(Vector &&other) noexcept;
   //Vector(Vector&& other, const Alloc& alloc );
-  template< class InputIt >
-  Vector(InputIt first, InputIt last, const Alloc& alloc = Alloc());
+  template <class InputIt>
+  Vector(InputIt first, InputIt last, const Alloc &alloc = Alloc());
   ~Vector()
   {
-   // delete [] buffer;
-   if(m_size>0)
-   {
-     a.deallocate(buffer,m_reservedSize);
-   }
-    
+    std::cout << "dstr" << std::endl;
+    if (m_size > 0)
+    {
+      a.deallocate(buffer, m_reservedSize);
+    }
   }
 
-  T &at(uint32_t position) 
-  { 
-    if(position>=m_size)
+  T &at(uint32_t position)
+  {
+    if (position >= m_size)
     {
       throw std::out_of_range("Out of range while 'at' operation");
     }
-    return buffer[position]; 
+    return buffer[position];
   };
-  const T &at(uint32_t position) const 
-  { 
-        if(position>=m_size)
+  const T &at(uint32_t position) const
+  {
+    if (position >= m_size)
     {
       throw std::out_of_range("Out of range while 'at' operation");
     }
-    return buffer[position]; 
+    return buffer[position];
   };
 
   T &front() { return buffer[0]; };
@@ -182,6 +208,8 @@ public:
   //iterators
   iterator begin() noexcept
   {
+    //std::cout << "begin called. iterator returned, should be ptr: " << static_cast<void *>(buffer) << std::endl;
+    //std::cout << "last element ptrshould be: " << static_cast<void *>(buffer + (m_size - 1)) << std::endl;
     return iterator(buffer);
   };
   const_iterator begin() const noexcept
@@ -194,6 +222,7 @@ public:
   };
   iterator end() noexcept
   {
+    //std::cout << "end called. iterator returned, should be ptr: " << static_cast<void *>(buffer + m_size) << std::endl;
     return iterator(buffer + m_size);
   };
   const_iterator end() const noexcept
@@ -218,12 +247,12 @@ public:
   };
   uint32_t max_size() //TODO
   {
-  return 0;
+    return 0;
   }
 
   void reserve(uint32_t new_capability)
   {
-   /* if(new_capability > max_size())
+    /* if(new_capability > max_size())
     {
       throw std::length_error("requested capability is greater than max size");
     } 
@@ -239,21 +268,20 @@ public:
   //modifiers
   void clear() noexcept //TODO: implement
   {
-
   }
 
   /*
     Inserts TODO: exceptions
 */
-// TODO: Handle inserting aout of range <begin(),m_size) -> throw exception
+  // TODO: Handle inserting aout of range <begin(),m_size) -> throw exception
   iterator insert(const_iterator pos, const T &value)
   {
-   // std::cout<<"insert begin &"<<std::endl;
+    // std::cout<<"insert begin &"<<std::endl;
     uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
-   // std::cout<<"check memory"<<std::endl;
+    // std::cout<<"check memory"<<std::endl;
     checkMemory();
-   // std::cout<<"check memory"<<std::endl;
-    shiftContent(position,1);
+    // std::cout<<"check memory"<<std::endl;
+    shiftContent(position, 1);
     //checkMemoryForShifting(1,position);
     insertToBuffer(position, value);
     m_size++;
@@ -291,21 +319,20 @@ public:
     }
     return iterator(buffer + position);
   }
-  
+
   template <class InputIterator>
   void insert(const_iterator pos, InputIterator first, InputIterator last)
   {
     uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
-    uint32_t count = std::distance(first,last);
+    uint32_t count = std::distance(first, last);
     checkMemory(count);
-    shiftContent(position,count);
+    shiftContent(position, count);
 
-    for(auto  i = first; i!=last; i++)
+    for (auto i = first; i != last; i++)
     {
       insertToBuffer(position, (*i));
       position++;
     }
-
   }
 
   template <class... Args>
@@ -314,16 +341,17 @@ public:
     uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
     checkMemory();
     shiftContent(position, 1);
-    a.construct(buffer+position,std::forward<Args>(args)...);
+    a.construct(buffer + position, std::forward<Args>(args)...);
     m_size++;
-    return iterator(buffer+position);
+    return iterator(buffer + position);
   }
 
   template <class... Args>
-  T& emplace_back(Args &&... args)
+  T &emplace_back(Args &&... args)
   {
     checkMemory();
-    a.construct(buffer+m_size, args...);
+    //std::cout<<"&& new data will be placed on position: "<<m_size<<" at address: "<<static_cast<void*>(buffer + m_size)<<std::endl;
+    a.construct(buffer + m_size, args...);
     m_size++;
     return back();
   }
@@ -340,24 +368,24 @@ public:
 
   void push_back(T &&object)
   {
+
     emplace_back(std::move(object));
   }
 
   void pop_back()
   {
-    if(m_size>0)
+    if (m_size > 0)
     {
-    m_size--;
-    buffer[m_size].~T();
+      m_size--;
+      buffer[m_size].~T();
     }
   }
 
   void resize(uint32_t new_size);
-  void resize(uint32_t new_size, const T& value);
+  void resize(uint32_t new_size, const T &value);
 
   void swap(Vector &other)
   {
-
   }
 
   //operators
@@ -371,62 +399,77 @@ public:
   Vector<T> &operator=(std::initializer_list<T> ilist); // replace with initializer list
 
 private:
-  void insertToBuffer(uint32_t& position, const T& value)
+   void insertToBuffer(uint32_t &position, const T &value)
   {
-    if(isTrivial)
+    if (isTrivial)
     {
       buffer[position] = value;
     }
     else
     {
-      a.construct(buffer+position, value);
+      //std::cout<<"& non trival insert to buffer"<<std::endl;
+      a.construct(buffer + position, value);
     }
   }
 
-  void insertToBuffer(uint32_t& position, T&& value)
+   void insertToBuffer(uint32_t &position, T &&value)
   {
-    if(isTrivial)
+    if (isTrivial)
     {
       buffer[position] = std::move(value);
     }
     else
     {
-      a.construct(buffer+position, std::move(value));
+           // std::cout<<"&& non trival insert to buffer"<<std::endl;
+      a.construct(buffer + position, std::move(value));
     }
+  }
+  inline void constructElementsShift(T *dst, T *src, const uint32_t count)
+  {
+      if(count == 0) return;
+      for (uint32_t i = count - 1; i > 0; i--)
+      {
+        a.construct(&dst[i], std::move(src[i]));
+      }
+      new (&dst[0]) T(std::move(src[0]));
     
   }
-
- void shiftContent(uint32_t position, uint32_t elementCount)
+  inline void shiftContent(uint32_t position, uint32_t elementCount)
   {
-    memmove(buffer + position + elementCount, buffer + position, (m_size-position) * sizeof(T));  
+
+   // constructElementsShift(buffer + position + elementCount, buffer + position, m_size - position);
+     memmove(buffer + position + elementCount, buffer + position, (m_size-position) * sizeof(T));
+ //   std::cout << "shiftin " << elementCount << " elements from starting ptr: "
+  //            << static_cast<void *>(buffer + position) << " to dst ptr: " << static_cast<void *>(buffer + position + elementCount) << " size of T is: " << sizeof(T) << std::endl;
   }
 
-  bool checkMemory(uint32_t requiredSpace)
+  inline bool checkMemory(uint32_t requiredSpace)
   {
     if (m_size + requiredSpace > m_reservedSize)
     {
-     reallocate_memory([=]()->uint32_t {
-       uint32_t retMem = (m_reservedSize == 0) ? 1 : m_reservedSize*2;
-       while (requiredSpace + m_size > retMem)
-       {
-         retMem *= 2;
-       }
-       return retMem;
-     }());
-    return true;
+      reallocate_memory([=]() -> uint32_t {
+        uint32_t retMem = (m_reservedSize == 0) ? 1 : m_reservedSize * 2;
+        while (requiredSpace + m_size > retMem)
+        {
+          retMem *= 2;
+        }
+        return retMem;
+      }());
+      return true;
     }
     return false;
   }
   // TODO: sprawdzac czy doszlo do realokacji. jesli nie to iteratory sa valid i nie trzeba ich ponownie robic
-   bool checkMemory()
+  inline bool checkMemory()
   {
     return checkMemory(1);
   }
 
-  void reallocate_memory(uint32_t newSize)
+  inline void reallocate_memory(uint32_t newSize)
   {
+
     T *tmp = a.allocate(newSize);
-    uint32_t gap = 0;
+      //  std::cout<<"--- memory reallocation to: "<<static_cast<void*>(tmp)<<" --- from "<< static_cast<void*>(buffer)<< "size: "<<newSize <<std::endl;
     if (newSize < m_reservedSize)
     {
       if (newSize < m_size)
@@ -436,43 +479,35 @@ private:
     }
     if (m_size > 0)
     {
-     /*for (int i = 0; i < m_size; i++)
+
+      if(isTrivial)
       {
-        if(gapSize != 0 && position - 1 == i)
+        memcpy(tmp, buffer, m_size * sizeof(T));
+      }
+      else
+      {
+        //std::cout<<"constructing non-trival" <<std::endl;
+       for (uint32_t i = 0; i < m_size; i++)
         {
-          gap = gapSize;
+         a.construct(tmp+i, std::move(buffer[i]));
         }
-        if(isTrivial)
-        {
-         // tmp[i+gap] = buffer[i];
-         memmove(dst, src, n*sizeof(value_type));
-
-        // memmove(&arr[0], &arr[1], sizeof(arr) - sizeof(*arr));
-        }
-        else
-        {
-          a.construct(tmp+i+gap, buffer[i]);
-        }        
-        //TODO: SFINAE
-      }*/
-      
-        memmove(tmp, buffer, m_size*sizeof(T));
-        a.deallocate(buffer, m_reservedSize);
-
-     /* std::cout<<"memmove 1: m_size - position"<<m_size-position<<std::endl;
-      memmove(tmp, buffer, (position - 1) * sizeof(T));
-      std::cout<<"memmove 2; to position: "<<position+gap<<std::endl;
-      memmove(tmp + position + gap, buffer + position, (m_size-position)*sizeof(T));
+      }
       a.deallocate(buffer, m_reservedSize);
-      */
     }
     buffer = tmp;
     m_reservedSize = newSize;
   };
-
+  void log(std::string logContent)
+  {
+    if(enableLogging)
+    {
+      std::cout<<logContent<<std::endl;
+    }
+  }
   Alloc a;
   T *buffer;
   uint32_t m_size = 0;
   uint32_t m_reservedSize = 0;
   bool isTrivial = std::is_trivially_copyable<T>::value;
+  bool enableLogging = false;
 };
