@@ -177,6 +177,10 @@ public:
     std::cout << "dstr" << std::endl;
     if (m_size > 0)
     {
+      for(int i=0; i<m_size; i++)
+      {
+        buffer[i].~T();
+      }
       a.deallocate(buffer, m_reservedSize);
     }
   }
@@ -263,7 +267,13 @@ public:
     }
   };
   uint32_t capacity() const noexcept { return m_reservedSize; };
-  void shrink_to_fit();
+  void shrink_to_fit()
+  {
+    if(m_size>0)
+    {
+      reallocate_memory(m_size);
+    }
+  }
 
   //modifiers
   void clear() noexcept //TODO: implement
@@ -368,7 +378,6 @@ public:
 
   void push_back(T &&object)
   {
-
     emplace_back(std::move(object));
   }
 
@@ -386,6 +395,18 @@ public:
 
   void swap(Vector &other)
   {
+      Alloc _tmp_a = std::move(other.a);
+      T *_tmp_buffer = std::move(other.buffer);
+      uint32_t _tmp_m_size = std::move(other.m_size);
+      uint32_t _tmp_m_reservedSize = std::move(other.m_reservedSize);
+      other.a = std::move(a);
+      other.buffer = std::move(buffer);
+      other.m_size = std::move(m_size);
+      other.m_reservedSize = std::move(m_reservedSize);
+      a = std::move(_tmp_a);
+      buffer = std::move(_tmp_buffer);
+      m_size = std::move(_tmp_m_size);
+      m_reservedSize = std::move(_tmp_m_reservedSize);
   }
 
   //operators
@@ -394,11 +415,47 @@ public:
     return buffer[element];
   };
 
-  Vector<T> &operator=(const Vector<T> &other);         //copy
-  Vector<T> &operator=(Vector<T> &&other);              //move
-  Vector<T> &operator=(std::initializer_list<T> ilist); // replace with initializer list
+  Vector<T> &operator=(const Vector<T> &other)         //copy
+  {
+    m_size = other.m_size;
+    a = other.a;
+    m_reservedSize = other.m_reservedSize;
+    buffer = a.allocate(m_reservedSize);
+    isTrivial = other.isTrivial;
+    for (uint32_t i = 0; i < m_size; i++)
+    {
+      a.construct(buffer+i, other.buffer[i]);
+    }
+
+  }
+  Vector<T> &operator=(Vector<T> &&other)              //move
+  {
+    m_size = other.m_size;
+    other.m_size = 0;
+    a = std::move(other.a);
+    m_reservedSize = std::move(other.m_reservedSize);
+    buffer = std::move(other.buffer);
+    other.buffer = nullptr;
+    isTrivial = std::move(other.isTrivial);
+  }
+  Vector<T> &operator=(std::initializer_list<T> ilist) // replace with initializer list
+  {
+    if(m_size>0)
+    {
+       a.deallocate(buffer, m_reservedSize);
+    }
+    m_reservedSize = 0;
+    m_size = 0;
+
+    for (auto x : ilist)
+    {
+      push_back(x);
+    }
+  }
 
 private:
+
+// TODO: perfect forwarding to avoid of implementation multiple overloads for l and r value parameters
    void insertToBuffer(uint32_t &position, const T &value)
   {
     if (isTrivial)

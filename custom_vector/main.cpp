@@ -26,7 +26,7 @@ public:
     }
     ~test()
     {
-        //std::cout<<"destructor of test: "<<static_cast<void*>(this)<<std::endl;
+        std::cout<<"destructor of test: "<<static_cast<void*>(this)<<std::endl;
     }
     void print()
     {
@@ -129,10 +129,10 @@ int main()
     // Vector<trywialna> iii;
 
     std::cout << " ---------------- Object push back test --------------------------- " << std::endl;
-    for (int i = 1; i < 10000000; i *= 2)
+    for (int i = 1; i < 100; i *= 2)
     {
 
-        testContainerPushBack(vv, "A\t", test(1, 2, "666"), i);
+        //testContainerPushBack(vv, "A\t", test(1, 2, "666"), i);
         testContainerPushBack(v, "B\t", test(1, 2, "666"), i);
     }
    // std::cout << " -------------------Int push back test------------------------ " << std::endl;
