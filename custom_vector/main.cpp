@@ -26,7 +26,7 @@ public:
     }
     ~test()
     {
-        std::cout<<"destructor of test: "<<static_cast<void*>(this)<<std::endl;
+       // std::cout<<"destructor of test: "<<static_cast<void*>(this)<<std::endl;
     }
     void print()
     {
@@ -133,8 +133,12 @@ int main()
     {
 
         //testContainerPushBack(vv, "A\t", test(1, 2, "666"), i);
-        testContainerPushBack(v, "B\t", test(1, 2, "666"), i);
+        testContainerPushBack(v, "B\t", test(1, 2, "666"), 100000);
     }
+
+    std::cout << " ---------------- clear --------------------------- " << std::endl;
+    v.clear();
+    std::cout << " ------------------------------------------- " << std::endl;
    // std::cout << " -------------------Int push back test------------------------ " << std::endl;
   /*  for (int i = 1; i < 10; i *= 2)
     {

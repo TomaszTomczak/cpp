@@ -278,6 +278,18 @@ public:
   //modifiers
   void clear() noexcept //TODO: implement
   {
+    if (m_size > 0)
+    {
+      for(int i=0; i<m_size; i++)
+      {
+        buffer[i].~T();
+      }
+      a.deallocate(buffer, m_reservedSize);
+      m_size = 0;
+      m_reservedSize = 0;
+      buffer = nullptr;
+    }
+    
   }
 
   /*
@@ -488,7 +500,7 @@ private:
       {
         a.construct(&dst[i], std::move(src[i]));
       }
-      new (&dst[0]) T(std::move(src[0]));
+     // new (&dst[0]) T(std::move(src[0]));
     
   }
   inline void shiftContent(uint32_t position, uint32_t elementCount)
