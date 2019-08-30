@@ -276,7 +276,7 @@ public:
   }
 
   //modifiers
-  void clear() noexcept //TODO: implement
+  void clear() noexcept
   {
     if (m_size > 0)
     {
@@ -296,6 +296,7 @@ public:
     Inserts TODO: exceptions
 */
   // TODO: Handle inserting aout of range <begin(),m_size) -> throw exception
+  // TODO: Fix shifting. Memmove doesnt work well and need to be replaced by construct
   iterator insert(const_iterator pos, const T &value)
   {
     // std::cout<<"insert begin &"<<std::endl;
@@ -309,6 +310,7 @@ public:
     m_size++;
     return iterator(buffer + position);
   }
+    // TODO: Fix shifting. Memmove doesnt work well and need to be replaced by construct
   void insert(const_iterator pos, uint32_t count, const T &value)
   {
     uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
@@ -321,12 +323,14 @@ public:
     }
   }
 
+  // TODO: Fix shifting. Memmove doesnt work well and need to be replaced by construct
   iterator insert(const_iterator pos, T &&value)
   {
     //std::cout<<"insert begin &&"<<std::endl;
     return emplace(pos, std::move(value));
   }
 
+  // TODO: Fix shifting. Memmove doesnt work well and need to be replaced by construct
   iterator insert(const_iterator pos, std::initializer_list<T> ilist)
   {
     checkMemory();
@@ -342,6 +346,7 @@ public:
     return iterator(buffer + position);
   }
 
+  // TODO: Fix shifting. Memmove doesnt work well and need to be replaced by construct
   template <class InputIterator>
   void insert(const_iterator pos, InputIterator first, InputIterator last)
   {
@@ -493,10 +498,13 @@ private:
       a.construct(buffer + position, std::move(value));
     }
   }
-  inline void constructElementsShift(T *dst, T *src, const uint32_t count)
+  // count: negative value: element/elements was erased and need to shift to cover gap
+  //        positie value: elements will be inserted and need to shift to create space for them
+  //        TODO: check if this function works 
+  inline void constructElementsShift(T *dst, T *src, const int32_t count) 
   {
       if(count == 0) return;
-      for (uint32_t i = count - 1; i > 0; i--)
+      for (int32_t i = count - 1; i > 0; i--)
       {
         a.construct(&dst[i], std::move(src[i]));
       }
