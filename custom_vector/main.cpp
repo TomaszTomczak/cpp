@@ -30,7 +30,7 @@ public:
     }
     void print()
     {
-        std::cout << c << " " <<text;
+        std::cout << c << " " <<text<<" "<<q1<< " " << q5 ;
     }
 
 
@@ -129,45 +129,44 @@ int main()
     // Vector<trywialna> iii;
 
     std::cout << " ---------------- Object push back test --------------------------- " << std::endl;
-    for (int i = 1; i < 100; i *= 2)
+    for (int i = 1; i < 10000; i *= 2)
     {
 
-        //testContainerPushBack(vv, "A\t", test(1, 2, "666"), i);
-        testContainerPushBack(v, "B\t", test(1, 2, "666"), 100000);
+        testContainerPushBack(vv, "A\t", test(1, 2, "666"), i);
+        testContainerPushBack(v, "B\t", test(1, 2, "666"), i);
     }
 
-    std::cout << " ---------------- clear --------------------------- " << std::endl;
-    v.clear();
-    std::cout << " ------------------------------------------- " << std::endl;
-   // std::cout << " -------------------Int push back test------------------------ " << std::endl;
-  /*  for (int i = 1; i < 10; i *= 2)
+
+ std::cout << " -------------------Int push back test------------------------ " << std::endl;
+   for (int i = 1; i < 1000000; i *= 2)
     {
         testContainerPushBack(stdIntTest, "A\t", i, i);
         testContainerPushBack(myIntTest, "B\t", i, i);
     }
-    std::cout << " --------------------end of push back tests----------------------- " << std::endl;*/
-    /*for(int i =0; i<1000; i++)
-{
-    v.push_back(test(1,2,"555"));
-}*/
 
-    /*for(int i =1; i<20000; i*=2)
+    std::cout << " -------------------insert object------------------------ " << std::endl;
+    for(int i =1; i<4000; i*=2)
 {
     testContainerInsert(vv, "A\t",i);
     testContainerInsert(v, "B\t",i);
 
-}*/
-   /* std::cout << " ------------------------------------------- " << std::endl;
-    for (int i = 1; i < 20000; i *= 2)
-    {
-        testContainerInsertInt(emplaceA, "A\t", i);
-        testContainerInsertInt(emplaceB, "B\t", i);
-    }*/
+}
 
-    std::cout << " -------------------insert object------------------------ " << std::endl;
+for(auto x : v)
+{
+    x.print();
+}
+
+for(auto x : vv)
+{
+    x.print();
+}
 
 
-   /*for (int i = 1; i < 2; i *= 2)
+
+
+
+  /* for (int i = 1; i < 2; i *= 2)
     {
      testContainerInsert(v, "B\t",  8192);
         testContainerInsert(vv, "A\t",  8192);

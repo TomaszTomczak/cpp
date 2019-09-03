@@ -6,6 +6,7 @@
 #include <memory>
 #include <stdexcept>
 #include <cstring>
+#include <type_traits>
 
 template <typename T>
 class allocator
@@ -472,21 +473,22 @@ public:
 
 private:
 
-// TODO: perfect forwarding to avoid of implementation multiple overloads for l and r value parameters
-   void insertToBuffer(uint32_t &position, const T &value)
+   template <class U, typename std::enable_if<std::is_same<typename std::decay<U>::type,T>::value, T>::type* = nullptr>
+   void insertToBuffer(uint32_t &position, U&& value)
   {
+   //static_assert(std::is_same<typename std::decay<U>::type,T>::value);
     if (isTrivial)
     {
-      buffer[position] = value;
+      buffer[position] = std::forward<U>(value);
     }
     else
     {
       //std::cout<<"& non trival insert to buffer"<<std::endl;
-      a.construct(buffer + position, value);
+      a.construct(buffer + position, std::forward<U>(value));
     }
   }
 
-   void insertToBuffer(uint32_t &position, T &&value)
+ /*  void insertToBuffer(uint32_t &position, T &&value)
   {
     if (isTrivial)
     {
@@ -497,7 +499,7 @@ private:
            // std::cout<<"&& non trival insert to buffer"<<std::endl;
       a.construct(buffer + position, std::move(value));
     }
-  }
+  }*/
   // count: negative value: element/elements was erased and need to shift to cover gap
   //        positie value: elements will be inserted and need to shift to create space for them
   //        TODO: check if this function works 
@@ -514,10 +516,16 @@ private:
   inline void shiftContent(uint32_t position, uint32_t elementCount)
   {
 
-   // constructElementsShift(buffer + position + elementCount, buffer + position, m_size - position);
+    //constructElementsShift(buffer + position + elementCount, buffer + position, m_size - position);
      memmove(buffer + position + elementCount, buffer + position, (m_size-position) * sizeof(T));
  //   std::cout << "shiftin " << elementCount << " elements from starting ptr: "
   //            << static_cast<void *>(buffer + position) << " to dst ptr: " << static_cast<void *>(buffer + position + elementCount) << " size of T is: " << sizeof(T) << std::endl;
+  }
+
+  // TODO: sprawdzac czy doszlo do realokacji. jesli nie to iteratory sa valid i nie trzeba ich ponownie robic
+  inline bool checkMemory()
+  {
+    return checkMemory(1);
   }
 
   inline bool checkMemory(uint32_t requiredSpace)
@@ -536,11 +544,7 @@ private:
     }
     return false;
   }
-  // TODO: sprawdzac czy doszlo do realokacji. jesli nie to iteratory sa valid i nie trzeba ich ponownie robic
-  inline bool checkMemory()
-  {
-    return checkMemory(1);
-  }
+
 
   inline void reallocate_memory(uint32_t newSize)
   {
