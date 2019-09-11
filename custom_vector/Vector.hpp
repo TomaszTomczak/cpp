@@ -8,6 +8,14 @@
 #include <cstring>
 #include <type_traits>
 
+
+/*
+
+Check why if destructor is defined, so class is trivialy destructible there are some problems with memory
+
+*/
+
+
 template <typename T>
 class allocator
 {
@@ -31,6 +39,7 @@ public:
 
   pointer allocate(std::size_t n)
   {
+    //std::cout << "########### allocate size: "<< n <<std::endl;
     pointer buff;
     try
     {
@@ -44,17 +53,27 @@ public:
     return buff;
   }
 
-  void deallocate(value_type *p, std::size_t) noexcept
+  void deallocate(value_type *p, std::size_t size)  noexcept
   {
-    ::operator delete(p);
+    ::operator delete(p,size);
   }
 
   template <class U, class... Args>
   void construct(U *p, Args &&... args)
   {
     //std::cout << "new element will be placed at address: " << static_cast<void *>(p) << std::endl;
-    ::new (p) U(std::forward<Args>(args)...);
+    try
+    {
+      ::new (p) U(std::forward<Args>(args)...);
+    }
+    catch(const std::exception& e)
+    {
+      std::cout << "konstr. cos nie tak z pointerem:  "<<static_cast<void*>(p)<<" "<<e.what() << '\n';
+    }
+    
+    
   }
+  void destroy(pointer p) { p->~value_type(); }
 };
 
 template <typename T, typename Alloc = allocator<T>>
@@ -169,7 +188,7 @@ public:
     }
   }
   //Vector( const Vector& other, const Alloc& alloc);
-  Vector(Vector &&other) noexcept;
+  //Vector(Vector &&other) noexcept;
   //Vector(Vector&& other, const Alloc& alloc );
   template <class InputIt>
   Vector(InputIt first, InputIt last, const Alloc &alloc = Alloc());
@@ -300,7 +319,7 @@ public:
   // TODO: Fix shifting. Memmove doesnt work well and need to be replaced by construct
   iterator insert(const_iterator pos, const T &value)
   {
-    // std::cout<<"insert begin &"<<std::endl;
+    std::cout<<"insert copy &"<<std::endl;
     uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
     // std::cout<<"check memory"<<std::endl;
     checkMemory();
@@ -328,7 +347,8 @@ public:
   iterator insert(const_iterator pos, T &&value)
   {
     //std::cout<<"insert begin &&"<<std::endl;
-    return emplace(pos, std::move(value));
+    std::cout<<"insert move &"<<std::endl;
+    return emplace(pos, std::forward<T>(value));
   }
 
   // TODO: Fix shifting. Memmove doesnt work well and need to be replaced by construct
@@ -347,7 +367,6 @@ public:
     return iterator(buffer + position);
   }
 
-  // TODO: Fix shifting. Memmove doesnt work well and need to be replaced by construct
   template <class InputIterator>
   void insert(const_iterator pos, InputIterator first, InputIterator last)
   {
@@ -369,6 +388,7 @@ public:
     uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
     checkMemory();
     shiftContent(position, 1);
+   // std::cout<<"emplace"<<std::endl;
     a.construct(buffer + position, std::forward<Args>(args)...);
     m_size++;
     return iterator(buffer + position);
@@ -379,12 +399,19 @@ public:
   {
     checkMemory();
     //std::cout<<"&& new data will be placed on position: "<<m_size<<" at address: "<<static_cast<void*>(buffer + m_size)<<std::endl;
+   //     std::cout<<"emplace_back"<<std::endl;
     a.construct(buffer + m_size, args...);
     m_size++;
     return back();
   }
 
-  void erase(const_iterator pos);
+  void erase(const_iterator pos)
+  {
+    uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
+    buffer[position].~T();
+    shiftContent(position, -1);
+    m_size--;
+  }
   void erase(const_iterator first, const_iterator last);
 
   void push_back(const T &object)
@@ -442,6 +469,7 @@ public:
     isTrivial = other.isTrivial;
     for (uint32_t i = 0; i < m_size; i++)
     {
+          std::cout<<"copy operator"<<std::endl;
       a.construct(buffer+i, other.buffer[i]);
     }
 
@@ -484,6 +512,7 @@ private:
     else
     {
       //std::cout<<"& non trival insert to buffer"<<std::endl;
+    //      std::cout<<"insert to buffer at position:"<<position<<"m_size"<<m_size<<std::endl;
       a.construct(buffer + position, std::forward<U>(value));
     }
   }
@@ -505,24 +534,42 @@ private:
   //        TODO: check if this function works 
   inline void constructElementsShift(T *dst, T *src, const int32_t count) 
   {
+        //std::cout<<"construct element shift, eleents "<<count<<" from: "<<static_cast<void*>(src)<< " to: "<<static_cast<void*>(dst)<<std::endl;
       if(count == 0) return;
       for (int32_t i = count - 1; i > 0; i--)
-      {
+      {        
+        /*if(count>3677)
+        {
+          std::cout<<"trying to insert something to address: "<< static_cast<void*>(&dst[i]) << "from: " << static_cast<void*>(&src[i])<<std::endl;
+        }*/
         a.construct(&dst[i], std::move(src[i]));
+       // destroy(&src[i]);
       }
-     // new (&dst[0]) T(std::move(src[0]));
-    
+     // std::cout<<"end of loop"<<std::endl;
+      new (&dst[0]) T(std::move(src[0]));
+    //  std::cout<<"end of construct element shift"<<std::endl;
+
   }
-  inline void shiftContent(uint32_t position, uint32_t elementCount)
+ void shiftContent(uint32_t position, int32_t elementCount)
   {
 
     //constructElementsShift(buffer + position + elementCount, buffer + position, m_size - position);
+    /*if(elementCount>=0)
+    {
      memmove(buffer + position + elementCount, buffer + position, (m_size-position) * sizeof(T));
+    }
+    else
+    {
+     elementCount*=-1;
+     std::cout<<"Przesuniete bedzie: "<<(m_size-(position+elementCount))<<" obiektow, z pozycji: "<<position + elementCount<<"na pozycjie: "<<position <<std::endl;
+     memmove(buffer + position, buffer + position + elementCount, (m_size-(position+elementCount)) * sizeof(T));
+    }*/
+    constructElementsShift(buffer + position + elementCount, buffer + position, m_size - position);
+    
  //   std::cout << "shiftin " << elementCount << " elements from starting ptr: "
   //            << static_cast<void *>(buffer + position) << " to dst ptr: " << static_cast<void *>(buffer + position + elementCount) << " size of T is: " << sizeof(T) << std::endl;
   }
 
-  // TODO: sprawdzac czy doszlo do realokacji. jesli nie to iteratory sa valid i nie trzeba ich ponownie robic
   inline bool checkMemory()
   {
     return checkMemory(1);
@@ -533,11 +580,14 @@ private:
     if (m_size + requiredSpace > m_reservedSize)
     {
       reallocate_memory([=]() -> uint32_t {
+        //std::cout<<"0 m reserved size: "<<m_reservedSize<<std::endl;
         uint32_t retMem = (m_reservedSize == 0) ? 1 : m_reservedSize * 2;
+        //std::cout<<"1 calculated is: "<<retMem<<" m_size: "<<m_size << " m reserved size: "<<m_reservedSize<<" required space: "<<requiredSpace<<std::endl;
         while (requiredSpace + m_size > retMem)
         {
           retMem *= 2;
         }
+        //std::cout<<"calculated is: "<<retMem<<" m_size: "<<m_size << " m reserved size: "<<m_reservedSize<<std::endl;
         return retMem;
       }());
       return true;
@@ -547,9 +597,11 @@ private:
 
 
   inline void reallocate_memory(uint32_t newSize)
-  {
-
-    T *tmp = a.allocate(newSize);
+  {   
+    T* tmp = a.allocate(newSize);
+     
+ // std::cout<< "allocated memory count: "<<newSize<<" from address: "<<static_cast<void*>(tmp) << " to: "<<static_cast<void*>(tmp+newSize)<<std::endl;
+   
       //  std::cout<<"--- memory reallocation to: "<<static_cast<void*>(tmp)<<" --- from "<< static_cast<void*>(buffer)<< "size: "<<newSize <<std::endl;
     if (newSize < m_reservedSize)
     {
@@ -569,15 +621,32 @@ private:
       {
         //std::cout<<"constructing non-trival" <<std::endl;
        for (uint32_t i = 0; i < m_size; i++)
-        {
-         a.construct(tmp+i, std::move(buffer[i]));
+        {            
+            a.construct(tmp+i, std::move(buffer[i]));
+            a.destroy(&buffer[i]);                          
+         
         }
       }
-      a.deallocate(buffer, m_reservedSize);
+    a.deallocate(buffer, m_reservedSize);
+      
     }
     buffer = tmp;
     m_reservedSize = newSize;
   };
+
+  void destroy(T* p)
+	{
+    try
+    {
+      	a.destroy(p);
+    }
+    catch(const std::exception& e)
+    {
+      std::cerr<<"destroy " << e.what() << '\n';
+    }
+    
+	
+	}
   void log(std::string logContent)
   {
     if(enableLogging)

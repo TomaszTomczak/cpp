@@ -11,6 +11,7 @@ class trywialna
 public:
     int x = 0;
     int c = 4;
+
 };
 class test
 {
@@ -19,19 +20,30 @@ class test
 public:
     test(int i, int x, std::string z)
     {
-        text = z + "dupa";
+        
+        text = z + "dupa" + std::to_string(i);
         //text += i;
         c = i;
+        q1 += std::to_string(i);
         //std::cout<<"new test at: "<<static_cast<void*>(this)<<std::endl;
     }
-    ~test()
-    {
-       // std::cout<<"destructor of test: "<<static_cast<void*>(this)<<std::endl;
-    }
+    
+   // ~test()
+  //  {
+      // std::cout<<"removing: "<<text<<std::endl;
+  //  }
+   // test(test&&) = delete;
+
     void print()
     {
-        std::cout << c << " " <<text<<" "<<q1<< " " << q5 ;
+        //std::cout<<"--";
+        //std::cout<<"address in memory of this element is: "<<static_cast<void*>(this)<<std::endl;
+       // std::cout<<"address to string: "<<static_cast<void*>(&text)<<std::endl;
+        std::cout << text<<" i: "<<c<<std::endl ;
+        std::cout << q1 << std::endl;
+                std::cout<<"--"<<std::endl;
     }
+
 
 
 private:
@@ -71,13 +83,23 @@ void testContainerInsert(U& container, std::string type, int elements = 10000)
 
     for (int i = 0; i < elements; i++)
     {
-        container.insert(container.cbegin(), test(i, i, "test123"));
+      // try
+      //  {
+            container.insert(container.cbegin(), test(i, i, "test123"));
+      //  }
+      //  catch(const std::exception& e)
+      //  {
+     //       std::cerr << e.what() << '\n';
+      //      break;
+      //  }
+        
+       
     }
 
 
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<long double> elapsed_seconds = end - start;
-    std::cout << "Typ: " << type << "\t probka: " << elements << "\t\t time:" << elapsed_seconds.count() << "\n";
+    std::cout <<std::endl<< "Typ: " << type << "\t probka: " << elements << "\t\t time:" << elapsed_seconds.count() << "\n";
    
    // std::cout<<std::endl;
 }
@@ -125,11 +147,32 @@ int main()
 
     std::vector<int> emplaceA;
     Vector<int> emplaceB;
+
+
+  /*  v.push_back(test(1,2,"1"));
+    v.push_back(test(2,2,"2"));
+    v.push_back(test(3,2,"3"));
+    v.push_back(test(4,2,"4"));
+    v.push_back(test(5,2,"5"));
+
+for(auto x : v)
+{
+    x.print();
+}
+
+Vector<test>::const_iterator ite(&v[2]);
+
+v.erase(ite);
+ std::cout << " ---------------- erased --------------------------- " << std::endl;
+for(auto x : v)
+{
+    x.print();
+}*/
     //std::vector<trywialna> ii;
     // Vector<trywialna> iii;
 
-    std::cout << " ---------------- Object push back test --------------------------- " << std::endl;
-    for (int i = 1; i < 10000; i *= 2)
+   std::cout << " ---------------- Object push back test --------------------------- " << std::endl;
+    for (int i = 1; i < 40000; i *= 2)
     {
 
         testContainerPushBack(vv, "A\t", test(1, 2, "666"), i);
@@ -137,30 +180,52 @@ int main()
     }
 
 
- std::cout << " -------------------Int push back test------------------------ " << std::endl;
-   for (int i = 1; i < 1000000; i *= 2)
+ /*std::cout << " -------------------Int push back test------------------------ " << std::endl;
+   for (int i = 1; i < 100; i *= 2)
     {
         testContainerPushBack(stdIntTest, "A\t", i, i);
         testContainerPushBack(myIntTest, "B\t", i, i);
     }
-
+*/
     std::cout << " -------------------insert object------------------------ " << std::endl;
-    for(int i =1; i<4000; i*=2)
-{
-    testContainerInsert(vv, "A\t",i);
-    testContainerInsert(v, "B\t",i);
+        std::cout << "sizeof:  " <<sizeof(test)<< std::endl;
+    //for(int i =1; i<8000; i*=2)
+//{
+        //testContainerInsert(vv, "A\t",129000);
+        std::cout<<"-B-"<<std::endl;
+        testContainerInsert(v, "B\t",4);
 
-}
+//}
 
-for(auto x : v)
+  std::cout << std::boolalpha;
+  std::cout << "is_move_constructible:" << std::endl;
+  std::cout << "test: " << std::is_move_constructible<test>::value << std::endl;
+std::cout << "is_trivially_destructible:" << std::endl;
+  std::cout << "test: " << std::is_trivially_destructible<test>::value << std::endl;
+   std::cout << "is_trivially_move_constructible:" << std::endl;
+  std::cout << "test " << std::is_trivially_move_constructible<test>::value << std::endl;
+
+    std::cout << "is_move_constructible:" << std::endl;
+  std::cout << "trywwialna: " << std::is_move_constructible<trywialna>::value << std::endl;
+std::cout << "is_trivially_destructible:" << std::endl;
+  std::cout << "trywialna: " << std::is_trivially_destructible<trywialna>::value << std::endl;
+   std::cout << "is_trivially_move_constructible:" << std::endl;
+  std::cout << "trywialna " << std::is_trivially_move_constructible<trywialna>::value << std::endl;
+   std::cout << "is_trivially_move_copyable:" << std::endl;
+    std::cout << std::is_trivially_copyable<test>::value << '\n';
+        std::cout << std::is_trivially_copyable<trywialna>::value << '\n';
+
+    std::cout << " -------------------print my vector------------------------ " << std::endl;
+/*for(auto x : v)
 {
     x.print();
-}
+}*/
 
+  /*  std::cout << " -------------------print standard vector------------------------ " << std::endl;
 for(auto x : vv)
 {
     x.print();
-}
+}*/
 
 
 
@@ -168,8 +233,8 @@ for(auto x : vv)
 
   /* for (int i = 1; i < 2; i *= 2)
     {
-     testContainerInsert(v, "B\t",  8192);
-        testContainerInsert(vv, "A\t",  8192);
+     testContainerInsert(v, "B\t",  );
+     testContainerInsert(vv, "A\t",  8192);
    
     }*/
    /* for(int i =0; i<=16; i++)
