@@ -28,12 +28,44 @@ public:
         //std::cout<<"new test at: "<<static_cast<void*>(this)<<std::endl;
     }
     
-   // ~test()
-  //  {
-      // std::cout<<"removing: "<<text<<std::endl;
-  //  }
-   // test(test&&) = delete;
+    test(const test& other)
+    {
+        
+        q1 = other.q1; 
+        q2 = other.q2;
+        q3= other.q3;
+        q4 = other.q4;
+        q5 = other.q5;
+        q6 = other.q6;
+        var1 = other.var1;
+        var2 = other.var2;
+        var3 = other.var3;
+        text = other.text;
+        c= other.c;
+      //  std::cout<<"copy ctor: "<<text<<" object is under address: "<<static_cast<void*>(this)<<", copied from addres: "<<static_cast<const void*>(&other)<<std::endl;
+    }
+   ~test()
+    {
+     //  std::cout<<"removing: "<<text<<" under address: "<<static_cast<void*>(this)<<std::endl;
+    }
+// test(test&&) = default;
+ test &operator=(const test &other)         //copy
+  {
+   q1 = other.q1; 
+        q2 = other.q2;
+        q3= other.q3;
+        q4 = other.q4;
+        q5 = other.q5;
+        q6 = other.q6;
+        var1 = other.var1;
+        var2 = other.var2;
+        var3 = other.var3;
+        text = other.text;
+        c= other.c;
+      //  std::cout<<"copy operator: "<<text<<" object is under address: "<<static_cast<void*>(this)<<", copied from addres: "<<static_cast<const void*>(&other)<<std::endl;
+        return *this;
 
+  }
     void print()
     {
         //std::cout<<"--";
@@ -85,7 +117,10 @@ void testContainerInsert(U& container, std::string type, int elements = 10000)
     {
       // try
       //  {
-            container.insert(container.cbegin(), test(i, i, "test123"));
+        // std::cout<<"---inserting value :"<<i<<" container capacity: "<<container.capacity()<<" container size: "<<container.size()<<std::endl;
+        // std::cout<<"---- underlaying buffer addrres: "<<static_cast<void*>(container.data())<<std::endl;
+          container.insert(container.cbegin(), test(i, i, "test123"));
+            
       //  }
       //  catch(const std::exception& e)
       //  {
@@ -171,13 +206,13 @@ for(auto x : v)
     //std::vector<trywialna> ii;
     // Vector<trywialna> iii;
 
-   std::cout << " ---------------- Object push back test --------------------------- " << std::endl;
+ /*  std::cout << " ---------------- Object push back test --------------------------- " << std::endl;
     for (int i = 1; i < 40000; i *= 2)
     {
 
         testContainerPushBack(vv, "A\t", test(1, 2, "666"), i);
         testContainerPushBack(v, "B\t", test(1, 2, "666"), i);
-    }
+    }*/
 
 
  /*std::cout << " -------------------Int push back test------------------------ " << std::endl;
@@ -189,11 +224,11 @@ for(auto x : v)
 */
     std::cout << " -------------------insert object------------------------ " << std::endl;
         std::cout << "sizeof:  " <<sizeof(test)<< std::endl;
-    //for(int i =1; i<8000; i*=2)
+  //  for(int i =1; i<10; i++)
 //{
-        //testContainerInsert(vv, "A\t",129000);
-        std::cout<<"-B-"<<std::endl;
-        testContainerInsert(v, "B\t",4);
+        testContainerInsert(vv, "A\t",4000);
+        std::cout<<"--------------------------------------------------------------------B-"<<std::endl;
+        testContainerInsert(v, "B\t",4000);
 
 //}
 
@@ -216,16 +251,16 @@ std::cout << "is_trivially_destructible:" << std::endl;
         std::cout << std::is_trivially_copyable<trywialna>::value << '\n';
 
     std::cout << " -------------------print my vector------------------------ " << std::endl;
-/*for(auto x : v)
+for(auto x : v)
 {
-    x.print();
-}*/
+  //  x.print();
+}
 
-  /*  std::cout << " -------------------print standard vector------------------------ " << std::endl;
+    std::cout << " -------------------print standard vector------------------------ " << std::endl;
 for(auto x : vv)
 {
-    x.print();
-}*/
+  //  x.print();
+}
 
 
 

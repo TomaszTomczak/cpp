@@ -39,18 +39,7 @@ public:
 
   pointer allocate(std::size_t n)
   {
-    //std::cout << "########### allocate size: "<< n <<std::endl;
-    pointer buff;
-    try
-    {
-      buff = static_cast<pointer>(::operator new(n * sizeof(value_type)));
-    }
-    catch(const std::exception& e)
-    {
-      std::cout << "###########" <<e.what() << '\n';
-    }
-    
-    return buff;
+    return  static_cast<pointer>(::operator new(n * sizeof(value_type)));    
   }
 
   void deallocate(value_type *p, std::size_t size)  noexcept
@@ -61,7 +50,6 @@ public:
   template <class U, class... Args>
   void construct(U *p, Args &&... args)
   {
-    //std::cout << "new element will be placed at address: " << static_cast<void *>(p) << std::endl;
     try
     {
       ::new (p) U(std::forward<Args>(args)...);
@@ -101,37 +89,30 @@ public:
     // operators
     ptrdiff_t operator-(const iteratorBase &it)
     {
-      //std::cout << "ptrdiff" << std::endl;
       return ptr_ - it.ptr_;
     }
     self_type operator++()
     {
-     // std::cout << "i++ in iterator" << std::endl;
       self_type i = *this;
       ptr_++;
-      //std::cout << "++ pointer value: " << static_cast<const void *>(ptr_) << std::endl;
       return i;
     }
     self_type operator++(int junk)
     {
-      //std::cout << "++itertor" << std::endl;
       ptr_++;
       return *this;
     }
     self_type operator=(const self_type &other)
     {
-      //std::cout << "operator =" << std::endl;
       ptr_ = other.ptr_;
       return *this;
     }
     pointer operator->()
     {
-      //std::cout << "wyluskanie" << std::endl;
       return ptr_;
     }
     reference operator*()
     {
-      //std::cout << "dereferencja, pointer address: " << static_cast<void *>(ptr_) << std::endl;
       return *ptr_;
     }
     bool operator==(const self_type &rhs) { return ptr_ == rhs.ptr_; }
@@ -194,7 +175,6 @@ public:
   Vector(InputIt first, InputIt last, const Alloc &alloc = Alloc());
   ~Vector()
   {
-    std::cout << "dstr" << std::endl;
     if (m_size > 0)
     {
       for(int i=0; i<m_size; i++)
@@ -232,8 +212,6 @@ public:
   //iterators
   iterator begin() noexcept
   {
-    //std::cout << "begin called. iterator returned, should be ptr: " << static_cast<void *>(buffer) << std::endl;
-    //std::cout << "last element ptrshould be: " << static_cast<void *>(buffer + (m_size - 1)) << std::endl;
     return iterator(buffer);
   };
   const_iterator begin() const noexcept
@@ -246,7 +224,6 @@ public:
   };
   iterator end() noexcept
   {
-    //std::cout << "end called. iterator returned, should be ptr: " << static_cast<void *>(buffer + m_size) << std::endl;
     return iterator(buffer + m_size);
   };
   const_iterator end() const noexcept
@@ -316,24 +293,22 @@ public:
     Inserts TODO: exceptions
 */
   // TODO: Handle inserting aout of range <begin(),m_size) -> throw exception
-  // TODO: Fix shifting. Memmove doesnt work well and need to be replaced by construct
   iterator insert(const_iterator pos, const T &value)
   {
-    std::cout<<"insert copy &"<<std::endl;
-    uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
-    // std::cout<<"check memory"<<std::endl;
+    //std::cout<<"insert copy &"<<std::endl;
+    //uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
+    uint32_t position = std::distance(cbegin(), pos);
     checkMemory();
-    // std::cout<<"check memory"<<std::endl;
     shiftContent(position, 1);
-    //checkMemoryForShifting(1,position);
     insertToBuffer(position, value);
     m_size++;
     return iterator(buffer + position);
   }
-    // TODO: Fix shifting. Memmove doesnt work well and need to be replaced by construct
+
   void insert(const_iterator pos, uint32_t count, const T &value)
   {
-    uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
+    //uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
+    uint32_t position = std::distance(cbegin(), pos);
     checkMemory(count);
     shiftContent(position, count);
     for (int i = position; i <= (position + count) - 1; i++)
@@ -343,19 +318,17 @@ public:
     }
   }
 
-  // TODO: Fix shifting. Memmove doesnt work well and need to be replaced by construct
   iterator insert(const_iterator pos, T &&value)
   {
-    //std::cout<<"insert begin &&"<<std::endl;
-    std::cout<<"insert move &"<<std::endl;
     return emplace(pos, std::forward<T>(value));
   }
 
-  // TODO: Fix shifting. Memmove doesnt work well and need to be replaced by construct
   iterator insert(const_iterator pos, std::initializer_list<T> ilist)
   {
+
+  //  uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
+    uint32_t position = std::distance(cbegin(), pos);
     checkMemory();
-    uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
     uint32_t elementCount = static_cast<uint32_t>(ilist.size());
     shiftContent(position, elementCount);
     uint32_t startInsertPosition = position;
@@ -370,7 +343,8 @@ public:
   template <class InputIterator>
   void insert(const_iterator pos, InputIterator first, InputIterator last)
   {
-    uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
+    uint32_t position = std::distance(cbegin(), pos);
+    //uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
     uint32_t count = std::distance(first, last);
     checkMemory(count);
     shiftContent(position, count);
@@ -385,10 +359,10 @@ public:
   template <class... Args>
   iterator emplace(const_iterator pos, Args &&... args)
   {
-    uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
+    uint32_t position = std::distance(cbegin(), pos);
+   // uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
     checkMemory();
     shiftContent(position, 1);
-   // std::cout<<"emplace"<<std::endl;
     a.construct(buffer + position, std::forward<Args>(args)...);
     m_size++;
     return iterator(buffer + position);
@@ -398,8 +372,6 @@ public:
   T &emplace_back(Args &&... args)
   {
     checkMemory();
-    //std::cout<<"&& new data will be placed on position: "<<m_size<<" at address: "<<static_cast<void*>(buffer + m_size)<<std::endl;
-   //     std::cout<<"emplace_back"<<std::endl;
     a.construct(buffer + m_size, args...);
     m_size++;
     return back();
@@ -407,7 +379,7 @@ public:
 
   void erase(const_iterator pos)
   {
-    uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
+    uint32_t position = std::distance(cbegin(), pos);
     buffer[position].~T();
     shiftContent(position, -1);
     m_size--;
@@ -502,107 +474,58 @@ public:
 private:
 
    template <class U, typename std::enable_if<std::is_same<typename std::decay<U>::type,T>::value, T>::type* = nullptr>
-   void insertToBuffer(uint32_t &position, U&& value)
+   inline void insertToBuffer(const uint32_t &position, U&& value)
   {
-   //static_assert(std::is_same<typename std::decay<U>::type,T>::value);
     if (isTrivial)
     {
       buffer[position] = std::forward<U>(value);
     }
     else
     {
-      //std::cout<<"& non trival insert to buffer"<<std::endl;
-    //      std::cout<<"insert to buffer at position:"<<position<<"m_size"<<m_size<<std::endl;
       a.construct(buffer + position, std::forward<U>(value));
     }
   }
 
- /*  void insertToBuffer(uint32_t &position, T &&value)
-  {
-    if (isTrivial)
-    {
-      buffer[position] = std::move(value);
-    }
-    else
-    {
-           // std::cout<<"&& non trival insert to buffer"<<std::endl;
-      a.construct(buffer + position, std::move(value));
-    }
-  }*/
-  // count: negative value: element/elements was erased and need to shift to cover gap
-  //        positie value: elements will be inserted and need to shift to create space for them
-  //        TODO: check if this function works 
-  inline void constructElementsShift(T *dst, T *src, const int32_t count) 
-  {
-        //std::cout<<"construct element shift, eleents "<<count<<" from: "<<static_cast<void*>(src)<< " to: "<<static_cast<void*>(dst)<<std::endl;
-      if(count == 0) return;
-      for (int32_t i = count - 1; i > 0; i--)
-      {        
-        /*if(count>3677)
-        {
-          std::cout<<"trying to insert something to address: "<< static_cast<void*>(&dst[i]) << "from: " << static_cast<void*>(&src[i])<<std::endl;
-        }*/
-        a.construct(&dst[i], std::move(src[i]));
-       // destroy(&src[i]);
-      }
-     // std::cout<<"end of loop"<<std::endl;
-      new (&dst[0]) T(std::move(src[0]));
-    //  std::cout<<"end of construct element shift"<<std::endl;
-
-  }
- void shiftContent(uint32_t position, int32_t elementCount)
+inline void shiftContent(const uint32_t& position, const int32_t& elementCount)
   {
 
-    //constructElementsShift(buffer + position + elementCount, buffer + position, m_size - position);
-    /*if(elementCount>=0)
+    if(m_size == 0 || elementCount == 0) return;
+
+     //insertToBuffer(m_size, std::move(buffer[m_size-1]));
+
+     a.construct(&buffer[m_size], std::move(buffer[m_size-1]));
+     a.destroy(&buffer[m_size-1]); // remove old data to avoid memory leaks
+     for (int32_t i = (m_size + elementCount) - 2; i >= position + elementCount; i--)
     {
-     memmove(buffer + position + elementCount, buffer + position, (m_size-position) * sizeof(T));
+      buffer[i] = std::move(buffer[i-elementCount]);
     }
-    else
-    {
-     elementCount*=-1;
-     std::cout<<"Przesuniete bedzie: "<<(m_size-(position+elementCount))<<" obiektow, z pozycji: "<<position + elementCount<<"na pozycjie: "<<position <<std::endl;
-     memmove(buffer + position, buffer + position + elementCount, (m_size-(position+elementCount)) * sizeof(T));
-    }*/
-    constructElementsShift(buffer + position + elementCount, buffer + position, m_size - position);
-    
- //   std::cout << "shiftin " << elementCount << " elements from starting ptr: "
-  //            << static_cast<void *>(buffer + position) << " to dst ptr: " << static_cast<void *>(buffer + position + elementCount) << " size of T is: " << sizeof(T) << std::endl;
   }
 
-  inline bool checkMemory()
+  inline void checkMemory()
   {
-    return checkMemory(1);
+    checkMemory(1);
   }
 
-  inline bool checkMemory(uint32_t requiredSpace)
+  inline void checkMemory(const uint32_t& requiredSpace)
   {
     if (m_size + requiredSpace > m_reservedSize)
     {
       reallocate_memory([=]() -> uint32_t {
-        //std::cout<<"0 m reserved size: "<<m_reservedSize<<std::endl;
         uint32_t retMem = (m_reservedSize == 0) ? 1 : m_reservedSize * 2;
-        //std::cout<<"1 calculated is: "<<retMem<<" m_size: "<<m_size << " m reserved size: "<<m_reservedSize<<" required space: "<<requiredSpace<<std::endl;
         while (requiredSpace + m_size > retMem)
         {
           retMem *= 2;
         }
-        //std::cout<<"calculated is: "<<retMem<<" m_size: "<<m_size << " m reserved size: "<<m_reservedSize<<std::endl;
         return retMem;
       }());
-      return true;
+      
     }
-    return false;
   }
 
 
-  inline void reallocate_memory(uint32_t newSize)
+  inline void reallocate_memory(const uint32_t& newSize)
   {   
     T* tmp = a.allocate(newSize);
-     
- // std::cout<< "allocated memory count: "<<newSize<<" from address: "<<static_cast<void*>(tmp) << " to: "<<static_cast<void*>(tmp+newSize)<<std::endl;
-   
-      //  std::cout<<"--- memory reallocation to: "<<static_cast<void*>(tmp)<<" --- from "<< static_cast<void*>(buffer)<< "size: "<<newSize <<std::endl;
     if (newSize < m_reservedSize)
     {
       if (newSize < m_size)
@@ -619,7 +542,6 @@ private:
       }
       else
       {
-        //std::cout<<"constructing non-trival" <<std::endl;
        for (uint32_t i = 0; i < m_size; i++)
         {            
             a.construct(tmp+i, std::move(buffer[i]));
