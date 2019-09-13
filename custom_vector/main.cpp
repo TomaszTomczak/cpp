@@ -226,9 +226,9 @@ for(auto x : v)
         std::cout << "sizeof:  " <<sizeof(test)<< std::endl;
   //  for(int i =1; i<10; i++)
 //{
-        testContainerInsert(vv, "A\t",4000);
+        testContainerInsert(vv, "A\t",10);
         std::cout<<"--------------------------------------------------------------------B-"<<std::endl;
-        testContainerInsert(v, "B\t",4000);
+        testContainerInsert(v, "B\t",10);
 
 //}
 
@@ -251,15 +251,20 @@ std::cout << "is_trivially_destructible:" << std::endl;
         std::cout << std::is_trivially_copyable<trywialna>::value << '\n';
 
     std::cout << " -------------------print my vector------------------------ " << std::endl;
+   
+   Vector<test>::const_iterator ite(&v[2]);
+      Vector<test>::const_iterator ite2(&v[4]);
+   v.erase(ite,ite2);
+
 for(auto x : v)
 {
-  //  x.print();
+    x.print();
 }
 
     std::cout << " -------------------print standard vector------------------------ " << std::endl;
 for(auto x : vv)
 {
-  //  x.print();
+    x.print();
 }
 
 

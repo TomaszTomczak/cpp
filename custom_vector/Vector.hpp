@@ -379,12 +379,19 @@ public:
 
   void erase(const_iterator pos)
   {
+    if(m_size == 0) return;
     uint32_t position = std::distance(cbegin(), pos);
     buffer[position].~T();
     shiftContent(position, -1);
     m_size--;
   }
-  void erase(const_iterator first, const_iterator last);
+  void erase(const_iterator first, const_iterator last)
+  {
+    uint32_t elementCount = std::distance(first,last);
+    uint32_t position = std::distance(cbegin(), first);
+    shiftContent(position, elementCount*-1);
+    m_size-=elementCount;
+  }
 
   void push_back(const T &object)
   {
@@ -444,7 +451,7 @@ public:
           std::cout<<"copy operator"<<std::endl;
       a.construct(buffer+i, other.buffer[i]);
     }
-
+    return *this; 
   }
   Vector<T> &operator=(Vector<T> &&other)              //move
   {
@@ -455,6 +462,7 @@ public:
     buffer = std::move(other.buffer);
     other.buffer = nullptr;
     isTrivial = std::move(other.isTrivial);
+    return *this;
   }
   Vector<T> &operator=(std::initializer_list<T> ilist) // replace with initializer list
   {
@@ -492,12 +500,34 @@ inline void shiftContent(const uint32_t& position, const int32_t& elementCount)
     if(m_size == 0 || elementCount == 0) return;
 
      //insertToBuffer(m_size, std::move(buffer[m_size-1]));
-
-     a.construct(&buffer[m_size], std::move(buffer[m_size-1]));
-     a.destroy(&buffer[m_size-1]); // remove old data to avoid memory leaks
-     for (int32_t i = (m_size + elementCount) - 2; i >= position + elementCount; i--)
+    if(elementCount>0)
     {
-      buffer[i] = std::move(buffer[i-elementCount]);
+      a.construct(&buffer[m_size], std::move(buffer[m_size-1]));
+     // a.destroy(&buffer[m_size-1]); // remove old data to avoid memory leaks
+      for (int32_t i = (m_size + elementCount) - 2; i >= position + elementCount; i--)
+      {
+        buffer[i] = std::move(buffer[i-elementCount]);
+      }
+    }
+    else
+    {
+      int elementsToCover = elementCount *-1;
+      int constructedElementNo = 0;
+      for(int i = position; i<m_size-elementsToCover; i++)
+      {
+        if(constructedElementNo<=elementsToCover)
+        {
+        constructedElementNo++;
+        buffer[i].~T();
+        a.construct(&buffer[i], std::move(buffer[i+elementsToCover]));
+        }
+        else
+        {
+          buffer[i] = buffer[i+elementsToCover];
+        }
+
+        //
+      }     
     }
   }
 
@@ -521,7 +551,6 @@ inline void shiftContent(const uint32_t& position, const int32_t& elementCount)
       
     }
   }
-
 
   inline void reallocate_memory(const uint32_t& newSize)
   {   
