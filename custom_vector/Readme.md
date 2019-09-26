@@ -25,6 +25,7 @@ Allocator	-	An allocator that is used to acquire/release memory and to construct
 
 ### Member functions
 
+|---------------|----------------------------------|
 | (constructor) | constructs the vector            |
 | (destructor)  | destructs the vector             |
 | operator=     | assigns values to the container  |
