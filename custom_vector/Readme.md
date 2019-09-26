@@ -30,7 +30,7 @@ Allocator	-	An allocator that is used to acquire/release memory and to construct
 
 | Name          | Description |
 |---------------|----------------------------------|
-| (constructor)[Constructor] | constructs the vector            |
+| [Constructor] | constructs the vector            |
 | (destructor)  | destructs the vector             |
 | operator=     | assigns values to the container  |
 | assign        | assigns values to the container  |
@@ -76,4 +76,6 @@ Allocator	-	An allocator that is used to acquire/release memory and to construct
 | resize | changes the number of elements stored |
 | swap | swaps the contents |
 
-##Constructor
+
+
+### Constructor
