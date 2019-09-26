@@ -48,7 +48,30 @@ Allocator	-	An allocator that is used to acquire/release memory and to construct
 #### Iterators
 | | |
 |------|------|
-| begin/cbegin| |
-| end/cend | |
-| rbegin/crbegin | |
-| rend/crend | |
+| begin/cbegin| returns an iterator to the beginning |
+| end/cend | returns an iterator to the end |
+| rbegin/crbegin | returns a reverse iterator to the beginning (To be implemented)|
+| rend/crend | return a reverse iterator to the end (To be implemented)|
+
+#### Capacity
+|||
+|-|-|
+| empty | checks if container is empty |
+| size | returns the number of elements |
+| max_size | not implemented |
+| reserve | reserves storage |
+| capacity | returns the number of elements that can be held in current allocated storage |
+| shrink_to_fit | freeing unused memory |
+
+#### Modifiers 
+|||
+|-|-|
+| clear | clears the contents |
+| insert | inserts elements |
+| emplace | constructs element in-place |
+| erase | erases elements |
+| push_back | adds an element to the end |
+| emplace_back | constructs an element in-place at the end |
+| pop_back | removes last element |
+| resize | changes the number of elements stored |
+| swap | swaps the contents |
