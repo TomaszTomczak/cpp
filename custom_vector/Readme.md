@@ -79,7 +79,7 @@ Allocator	-	An allocator that is used to acquire/release memory and to construct
 
 ## Details
 ### Constructor
-```
+1) ```
 Vector()
 ```
 ```
