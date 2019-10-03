@@ -88,7 +88,7 @@ Allocator	-	An allocator that is used to acquire/release memory and to construct
 7) Vector(const Vector& other, const Alloc& alloc);
 8) Vector(Vector &&other) noexcept;
 9) Vector(Vector&& other, const Alloc& alloc );
-10) template <class InputIt>
+10) template \<class InputIt\>
     Vector(InputIt first, InputIt last, const Alloc &alloc = Alloc());
 
 ### Destructor
