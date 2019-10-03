@@ -79,22 +79,18 @@ Allocator	-	An allocator that is used to acquire/release memory and to construct
 
 ## Details
 ### Constructor
-1) 
-```
-Vector()
-```
-```
-Vector(std::size_t count, const T &value, const Alloc &allocator = Alloc())
-Vector(std::initializer_list<T> ilist, const Alloc &allocator = Alloc())
-explicit Vector(const Alloc &alloc) noexcept
-explicit Vector(std::size_t count, const Alloc &alloc = Alloc());
-Vector(const Vector &other)
-Vector(const Vector& other, const Alloc& alloc);
-Vector(Vector &&other) noexcept;
-Vector(Vector&& other, const Alloc& alloc );
-template <class InputIt>
-Vector(InputIt first, InputIt last, const Alloc &alloc = Alloc());
-```
+1) Vector()
+2) Vector(std::size_t count, const T &value, const Alloc &allocator = Alloc())
+3) Vector(std::initializer_list<T> ilist, const Alloc &allocator = Alloc())
+4) explicit Vector(const Alloc &alloc) noexcept
+5) explicit Vector(std::size_t count, const Alloc &alloc = Alloc());
+6) Vector(const Vector &other)
+7) Vector(const Vector& other, const Alloc& alloc);
+8) Vector(Vector &&other) noexcept;
+9) Vector(Vector&& other, const Alloc& alloc );
+10) template <class InputIt>
+    Vector(InputIt first, InputIt last, const Alloc &alloc = Alloc());
+
 ### Destructor
 ### operator=
 ### assign
