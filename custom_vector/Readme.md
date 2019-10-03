@@ -79,7 +79,7 @@ Allocator	-	An allocator that is used to acquire/release memory and to construct
 
 ## Details
 ### Constructor
-```
+
 |||
 |-|-|
 | Vector()||
@@ -92,7 +92,7 @@ Allocator	-	An allocator that is used to acquire/release memory and to construct
 | Vector(Vector &&other) noexcept||
 | Vector(Vector&& other, const Alloc& alloc ) ||
 | template \<class InputIt\> <br> Vector(InputIt first, InputIt last, const Alloc &alloc = Alloc()) ||
-```
+
 ### Destructor
 ### operator=
 ### assign
