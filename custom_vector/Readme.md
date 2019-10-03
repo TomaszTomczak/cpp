@@ -1,5 +1,5 @@
 ### Vector
-
+---
 A sequence container that encapsulates dynamic size array.
 
 ```
@@ -79,7 +79,7 @@ Allocator	-	An allocator that is used to acquire/release memory and to construct
 
 ## Details
 ### Constructor
-
+---
 |||
 |-|-|
 | Vector()||
@@ -94,8 +94,11 @@ Allocator	-	An allocator that is used to acquire/release memory and to construct
 | template \<class InputIt\> <br> Vector(InputIt first, InputIt last, const Alloc &alloc = Alloc()) ||
 
 ### Destructor
+---
 ### operator=
+---
 ### assign
+---
 ### get_allocator
 ### at
 ### operator[]
