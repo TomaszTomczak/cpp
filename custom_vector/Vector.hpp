@@ -132,11 +132,11 @@ public:
 
   Vector(){};
 
-  Vector(uint32_t count, const T &value, const Alloc &allocator = Alloc())
+  Vector(std::size_t count, const T &value, const Alloc &allocator = Alloc())
   {
     a = allocator;
     buffer = a.allocate(count);
-    for (int i = 0; i <= count; i++)
+    for (std::size_t i = 0; i <= count; i++)
     {
       push_back(value);
     }
@@ -145,7 +145,7 @@ public:
   Vector(std::initializer_list<T> ilist, const Alloc &allocator = Alloc()) //TODO: update to handle allocator
   {
     a = allocator;
-    m_reservedSize = static_cast<int>(ilist.size());
+    m_reservedSize = static_cast<std::size_t>(ilist.size());
     for (auto x : ilist)
     {
       push_back(x);
@@ -155,7 +155,7 @@ public:
   {
     a = alloc;
   }
-  explicit Vector(uint32_t count, const Alloc &alloc = Alloc());
+  explicit Vector(std::size_t count, const Alloc &alloc = Alloc());
   Vector(const Vector &other)
   {
     a = other.a;
@@ -163,7 +163,7 @@ public:
     m_reservedSize = other.m_reservedSize;
     buffer = a.allocate(m_reservedSize);
 
-    for (int i = 0; i < m_size; i++)
+    for (std::size_t i = 0; i < m_size; i++)
     {
       buffer[i] = other.buffer[i];
     }
@@ -177,7 +177,7 @@ public:
   {
     if (m_size > 0)
     {
-      for(int i=0; i<m_size; i++)
+      for(std::size_t i=0; i<m_size; i++)
       {
         buffer[i].~T();
       }
@@ -185,7 +185,7 @@ public:
     }
   }
 
-  T &at(uint32_t position)
+  T &at(std::size_t position)
   {
     if (position >= m_size)
     {
@@ -193,7 +193,7 @@ public:
     }
     return buffer[position];
   };
-  const T &at(uint32_t position) const
+  const T &at(std::size_t position) const
   {
     if (position >= m_size)
     {
@@ -242,16 +242,16 @@ public:
   {
     return m_size == 0;
   };
-  uint32_t size() const noexcept
+  std::size_t size() const noexcept
   {
     return m_size;
   };
-  uint32_t max_size() //TODO
+  std::size_t max_size() //TODO
   {
     return 0;
   }
 
-  void reserve(uint32_t new_capability)
+  void reserve(std::size_t new_capability)
   {
     /* if(new_capability > max_size())
     {
@@ -263,7 +263,7 @@ public:
       reallocate_memory(new_capability); //TODO: handle allocator exceptions
     }
   };
-  uint32_t capacity() const noexcept { return m_reservedSize; };
+  std::size_t capacity() const noexcept { return m_reservedSize; };
   void shrink_to_fit()
   {
     if(m_size>0)
@@ -277,7 +277,7 @@ public:
   {
     if (m_size > 0)
     {
-      for(int i=0; i<m_size; i++)
+      for(std::size_t i=0; i<m_size; i++)
       {
         buffer[i].~T();
       }
@@ -296,8 +296,8 @@ public:
   iterator insert(const_iterator pos, const T &value)
   {
     //std::cout<<"insert copy &"<<std::endl;
-    //uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
-    uint32_t position = std::distance(cbegin(), pos);
+    //std::size_t position = std::distance(static_cast<const_iterator>(begin()), pos);
+    std::size_t position = std::distance(cbegin(), pos);
     checkMemory();
     shiftContent(position, 1);
     insertToBuffer(position, value);
@@ -305,13 +305,13 @@ public:
     return iterator(buffer + position);
   }
 
-  void insert(const_iterator pos, uint32_t count, const T &value)
+  void insert(const_iterator pos, std::size_t count, const T &value)
   {
-    //uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
-    uint32_t position = std::distance(cbegin(), pos);
+    //std::size_t position = std::distance(static_cast<const_iterator>(begin()), pos);
+    std::size_t position = std::distance(cbegin(), pos);
     checkMemory(count);
     shiftContent(position, count);
-    for (int i = position; i <= (position + count) - 1; i++)
+    for (std::size_t i = position; i <= (position + count) - 1; i++)
     {
       insertToBuffer(i, value);
       m_size++;
@@ -326,12 +326,12 @@ public:
   iterator insert(const_iterator pos, std::initializer_list<T> ilist)
   {
 
-  //  uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
-    uint32_t position = std::distance(cbegin(), pos);
+  //  std::size_t position = std::distance(static_cast<const_iterator>(begin()), pos);
+    std::size_t position = std::distance(cbegin(), pos);
     checkMemory();
-    uint32_t elementCount = static_cast<uint32_t>(ilist.size());
+    std::size_t elementCount = static_cast<std::size_t>(ilist.size());
     shiftContent(position, elementCount);
-    uint32_t startInsertPosition = position;
+    std::size_t startInsertPosition = position;
     for (auto x : ilist)
     {
       insertToBuffer(startInsertPosition, x);
@@ -343,9 +343,9 @@ public:
   template <class InputIterator>
   void insert(const_iterator pos, InputIterator first, InputIterator last)
   {
-    uint32_t position = std::distance(cbegin(), pos);
-    //uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
-    uint32_t count = std::distance(first, last);
+    std::size_t position = std::distance(cbegin(), pos);
+    //std::size_t position = std::distance(static_cast<const_iterator>(begin()), pos);
+    std::size_t count = std::distance(first, last);
     checkMemory(count);
     shiftContent(position, count);
 
@@ -359,8 +359,8 @@ public:
   template <class... Args>
   iterator emplace(const_iterator pos, Args &&... args)
   {
-    uint32_t position = std::distance(cbegin(), pos);
-   // uint32_t position = std::distance(static_cast<const_iterator>(begin()), pos);
+    std::size_t position = std::distance(cbegin(), pos);
+   // std::size_t position = std::distance(static_cast<const_iterator>(begin()), pos);
     checkMemory();
     shiftContent(position, 1);
     a.construct(buffer + position, std::forward<Args>(args)...);
@@ -380,15 +380,15 @@ public:
   void erase(const_iterator pos)
   {
     if(m_size == 0) return;
-    uint32_t position = std::distance(cbegin(), pos);
+    std::size_t position = std::distance(cbegin(), pos);
     buffer[position].~T();
     shiftContent(position, -1);
     m_size--;
   }
   void erase(const_iterator first, const_iterator last)
   {
-    uint32_t elementCount = std::distance(first,last);
-    uint32_t position = std::distance(cbegin(), first);
+    std::size_t elementCount = std::distance(first,last);
+    std::size_t position = std::distance(cbegin(), first);
     shiftContent(position, elementCount*-1);
     m_size-=elementCount;
   }
@@ -414,15 +414,15 @@ public:
     }
   }
 
-  void resize(uint32_t new_size);
-  void resize(uint32_t new_size, const T &value);
+  void resize(std::size_t new_size);
+  void resize(std::size_t new_size, const T &value);
 
   void swap(Vector &other)
   {
       Alloc _tmp_a = std::move(other.a);
       T *_tmp_buffer = std::move(other.buffer);
-      uint32_t _tmp_m_size = std::move(other.m_size);
-      uint32_t _tmp_m_reservedSize = std::move(other.m_reservedSize);
+      std::size_t _tmp_m_size = std::move(other.m_size);
+      std::size_t _tmp_m_reservedSize = std::move(other.m_reservedSize);
       other.a = std::move(a);
       other.buffer = std::move(buffer);
       other.m_size = std::move(m_size);
@@ -434,7 +434,7 @@ public:
   }
 
   //operators
-  T &operator[](uint32_t element)
+  T &operator[](std::size_t element)
   {
     return buffer[element];
   };
@@ -446,7 +446,7 @@ public:
     m_reservedSize = other.m_reservedSize;
     buffer = a.allocate(m_reservedSize);
     isTrivial = other.isTrivial;
-    for (uint32_t i = 0; i < m_size; i++)
+    for (std::size_t i = 0; i < m_size; i++)
     {
           std::cout<<"copy operator"<<std::endl;
       a.construct(buffer+i, other.buffer[i]);
@@ -482,7 +482,7 @@ public:
 private:
 
    template <class U, typename std::enable_if<std::is_same<typename std::decay<U>::type,T>::value, T>::type* = nullptr>
-   inline void insertToBuffer(const uint32_t &position, U&& value)
+   inline void insertToBuffer(const std::size_t &position, U&& value)
   {
     if (isTrivial)
     {
@@ -494,7 +494,7 @@ private:
     }
   }
 
-inline void shiftContent(const uint32_t& position, const int32_t& elementCount)
+inline void shiftContent(const std::size_t& position, const int32_t& elementCount)
   {
 
     if(m_size == 0 || elementCount == 0) return;
@@ -536,12 +536,12 @@ inline void shiftContent(const uint32_t& position, const int32_t& elementCount)
     checkMemory(1);
   }
 
-  inline void checkMemory(const uint32_t& requiredSpace)
+  inline void checkMemory(const std::size_t& requiredSpace)
   {
     if (m_size + requiredSpace > m_reservedSize)
     {
-      reallocate_memory([=]() -> uint32_t {
-        uint32_t retMem = (m_reservedSize == 0) ? 1 : m_reservedSize * 2;
+      reallocate_memory([=]() -> std::size_t {
+        std::size_t retMem = (m_reservedSize == 0) ? 1 : m_reservedSize * 2;
         while (requiredSpace + m_size > retMem)
         {
           retMem *= 2;
@@ -552,7 +552,7 @@ inline void shiftContent(const uint32_t& position, const int32_t& elementCount)
     }
   }
 
-  inline void reallocate_memory(const uint32_t& newSize)
+  inline void reallocate_memory(const std::size_t& newSize)
   {   
     T* tmp = a.allocate(newSize);
     if (newSize < m_reservedSize)
@@ -571,7 +571,7 @@ inline void shiftContent(const uint32_t& position, const int32_t& elementCount)
       }
       else
       {
-       for (uint32_t i = 0; i < m_size; i++)
+       for (std::size_t i = 0; i < m_size; i++)
         {            
             a.construct(tmp+i, std::move(buffer[i]));
             a.destroy(&buffer[i]);                          
@@ -607,8 +607,8 @@ inline void shiftContent(const uint32_t& position, const int32_t& elementCount)
   }
   Alloc a;
   T *buffer;
-  uint32_t m_size = 0;
-  uint32_t m_reservedSize = 0;
+  std::size_t m_size = 0;
+  std::size_t m_reservedSize = 0;
   bool isTrivial = std::is_trivially_copyable<T>::value;
   bool enableLogging = false;
 };
