@@ -136,8 +136,8 @@ public:
   typedef std::ptrdiff_t difference_type;
   typedef value_type& reference;
   typedef const value_type& const_reference;
-  typedef T* pointer;
-  typedef const T* const_pointer;
+  typename std::allocator_traits<Alloc>::pointer pointer;
+  typename std::allocator_traits<Alloc>::const_pointer const_pointer;
   Vector(){};
 
   Vector(std::size_t count, const T &value, const Alloc &allocator = Alloc())
