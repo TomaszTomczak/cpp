@@ -38,7 +38,7 @@ class List
     //ctors
     iteratorBase(Node<T>* ptr) : ptr_(ptr) {}
     template <bool WasConst, class = std::enable_if_t<isConst && !WasConst>>
-    //iteratorBase(const iteratorBase<WasConst> &rhs) : ptr_(rhs.ptr_){/*std::cout << "conversion to const" << std::endl;*/};
+    iteratorBase(const iteratorBase<WasConst> &rhs) : ptr_(rhs.ptr_){/*std::cout << "conversion to const" << std::endl;*/};
     iteratorBase() {}
 
 
@@ -73,6 +73,7 @@ class List
     }
     bool operator==(const self_type &rhs) { return ptr_ == rhs.ptr_; }
     bool operator!=(const self_type &rhs) { return ptr_ != rhs.ptr_; }
+    // TODO: implement -- operator
 
     friend iteratorBase<true>; //ugh... I believe somewhere exists better way to handle this
   private:
