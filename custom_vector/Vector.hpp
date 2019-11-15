@@ -455,7 +455,7 @@ public:
   }
   Vector<T> &operator=(Vector<T> &&other)              //move
   {
-    m_size = other.m_size;
+    m_size = std::move(other.m_size);
     other.m_size = 0;
     a = std::move(other.a);
     m_reservedSize = std::move(other.m_reservedSize);
