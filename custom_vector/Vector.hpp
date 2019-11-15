@@ -77,7 +77,7 @@ public:
     typedef T value_type;
     typedef std::conditional_t<isConst, const T &, T &> reference;
     typedef std::conditional_t<isConst, const T *, T *> pointer;
-    typedef std::forward_iterator_tag iterator_category;
+    typedef std::random_access_iterator_tag iterator_category;
     typedef int difference_type;
 
     //ctors
@@ -130,6 +130,14 @@ public:
   {
   };
 
+  typedef T value_type;
+  typedef Alloc allocator_type;
+  typedef std::size_t size_type;
+  typedef std::ptrdiff_t difference_type;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef T* pointer;
+  typedef const T* const_pointer;
   Vector(){};
 
   Vector(std::size_t count, const T &value, const Alloc &allocator = Alloc())
