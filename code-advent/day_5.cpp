@@ -33,9 +33,12 @@ std::vector<int> prepareData()
                              1006, 224, 569, 1001, 223, 1, 223, 107, 677, 226, 224, 102, 2, 223, 223, 1005, 224, 584, 1001, 223, 1, 223, 108, 226, 226, 224, 102, 2, 223, 223, 1006, 224, 599, 1001, 223, 1, 223, 107,
                              226, 226, 224, 1002, 223, 2, 223, 1006, 224, 614, 1001, 223, 1, 223, 1108, 677, 226, 224, 1002, 223, 2, 223, 1005, 224, 629, 1001, 223, 1, 223, 1107, 677, 677, 224, 102, 2, 223, 223, 1005,
                              224, 644, 1001, 223, 1, 223, 1008, 677, 677, 224, 102, 2, 223, 223, 1005, 224, 659, 101, 1, 223, 223, 1107, 677, 226, 224, 1002, 223, 2, 223, 1006, 224, 674, 101, 1, 223, 223, 4, 223, 99, 226};
-
+    std::vector<int> helpData = {3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,
+1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,
+999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99};
     return data;
 }
+
 int getValueBased(int opcode, int parameterNumber, int value, const std::vector<int> &data)
 {
 
@@ -54,19 +57,22 @@ int getValueBased(int opcode, int parameterNumber, int value, const std::vector<
         {
             mode = '0';
         }
-        std::cout << "opcode: " << opcode << " parameterNumber " << parameterNumber << " value: " << value << " mode: " << mode << std::endl;
+        
         switch (mode)
         {
         case '0':
             returnVal = data[value];
+            //std::cout << "opcode: " << opcode << " parameterNumber " << parameterNumber << " value: " << returnVal << " mode: " << mode << std::endl;
             break;
         case '1':
             returnVal = value;
+             //std::cout << "opcode: " << opcode << " parameterNumber " << parameterNumber << " value: " << returnVal << " mode: " << mode << std::endl;
             break;
         default:
             returnVal = -1;
             break;
         }
+         //std::cout << "opcode: " << opcode << " parameterNumber " << parameterNumber << " value: " << returnVal << " mode: " << mode << std::endl;
     }
     else
     {
@@ -79,12 +85,12 @@ int getValueBased(int opcode, int parameterNumber, int value, const std::vector<
 
 int calculateData(std::vector<int> &&oper)
 {
-    int inputStore = 1;
+    int inputStore = 5;
     int outputStore;
     int stepForward = 4;
     //for (int i = 0; i <= oper.size(); i = i + stepForward)
-    int i=0;
-    while(i<oper.size())
+    int i = 0;
+    while (i < oper.size())
     {
         bool terminate = false;
         std::ostringstream os;
@@ -98,25 +104,83 @@ int calculateData(std::vector<int> &&oper)
             //oper[oper[i + 3]] = oper[oper[i + 1]] + oper[oper[i + 2]];
             std::cout << "opercode: " << digits << " " << oper[i + 1] << " " << oper[i + 2] << " " << oper[i + 3] << std::endl;
             oper[oper[i + 3]] = getValueBased(oper[i], 1, oper[i + 1], oper) + getValueBased(oper[i], 2, oper[i + 2], oper);
-            i+ = 4;
+            i += 4;
             break;
         case '2':
             //oper[oper[i + 3]] = oper[oper[i + 1]] * oper[oper[i + 2]];
             std::cout << "opercode: " << digits << " " << oper[i + 1] << " " << oper[i + 2] << " " << oper[i + 3] << std::endl;
             oper[oper[i + 3]] = getValueBased(oper[i], 1, oper[i + 1], oper) * getValueBased(oper[i], 2, oper[i + 2], oper);
-            i+ = 4;
+            i += 4;
             break;
         case '3':
             std::cout << "opercode: " << digits << " " << oper[i + 1] << " " << std::endl;
             std::cout << "load input: " << inputStore << " to position: " << oper[i + 1] << std::endl;
             oper[oper[i + 1]] = inputStore;
-            i+ = 2;
+            i += 2;
             break;
         case '4':
             std::cout << "opercode: " << digits << " " << oper[i + 1] << " " << std::endl;
+            
+            outputStore = getValueBased(oper[i], 1, oper[i + 1], oper); //oper[oper[i + 1]];
             std::cout << "save output: " << outputStore << " from: " << oper[i + 1] << std::endl;
-            outputStore = oper[oper[i + 1]];
-            i+ = 2;
+            i += 2;
+            break;
+        case '5':
+            std::cout << "opercode: " << digits << " " << oper[i + 1] << " " << oper[i + 2] << " " << oper[i + 3] << std::endl;
+            std::cout<< "----> !=0: "<<getValueBased(oper[i], 1, oper[i + 1], oper)<<std::endl;
+            if (getValueBased(oper[i], 1, oper[i + 1], oper) != 0)
+            {
+                i = getValueBased(oper[i], 2, oper[i + 2], oper);
+                std::cout<<"set pointer to: "<<i<<std::endl;
+            }
+            else
+            { std::cout<<"do nothing"<<std::endl;
+                i += 3;
+            };
+            break;
+        case '6':
+            std::cout << "opercode: " << digits << " " << oper[i + 1] << " " << oper[i + 2] << " " << oper[i + 3] << std::endl;
+            std::cout<< "----> ==0: "<<getValueBased(oper[i], 1, oper[i + 1], oper)<<std::endl;
+            if (getValueBased(oper[i], 1, oper[i + 1], oper) == 0)
+            {
+                i = getValueBased(oper[i], 2, oper[i + 2], oper);
+                std::cout<<"set pointer to: "<<i<<std::endl;
+            }
+            else
+            {std::cout<<"do nothing"<<std::endl;
+                i += 3;
+            };
+            break;
+        case '7':
+            std::cout << "opercode: " << digits << " " << oper[i + 1] << " " << oper[i + 2] << " " << oper[i + 3] << std::endl;
+            std::cout<< "----> "<<getValueBased(oper[i], 1, oper[i + 1], oper)<< "< " <<getValueBased(oper[i], 2, oper[i + 2], oper) <<std::endl;
+            if (getValueBased(oper[i], 1, oper[i + 1], oper) < getValueBased(oper[i], 2, oper[i + 2], oper))
+            {
+                
+                oper[oper[i + 3]] = 1;
+                std::cout << "----> set: "<<oper[i + 3]<< " to 1"<<std::endl;
+            }
+            else
+            {
+                oper[oper[i + 3]] = 0;
+                std::cout << "----> set: "<<oper[i + 3]<< " to 0"<<std::endl;
+            };
+            i += 4;
+            break;
+        case '8':
+            std::cout << "opercode: " << digits << " " << oper[i + 1] << " " << oper[i + 2] << " " << oper[i + 3] << std::endl;
+            std::cout<< "----> "<<getValueBased(oper[i], 1, oper[i + 1], oper)<< "== " <<getValueBased(oper[i], 2, oper[i + 2], oper) <<std::endl;
+            if (getValueBased(oper[i], 1, oper[i + 1], oper) == getValueBased(oper[i], 2, oper[i + 2], oper))
+            {
+                oper[oper[i + 3]] = 1;
+                std::cout << "----> set: "<<oper[i + 3]<< " to 1"<<std::endl;
+            }
+            else
+            {
+                oper[oper[i + 3]] = 0;
+                std::cout << "----> set: "<<oper[i + 3]<< " to 0"<<std::endl;
+            };
+            i += 4;
             break;
         case '9':
             terminate = true;
