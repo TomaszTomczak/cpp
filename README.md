@@ -1,2 +1,2 @@
 # cpp
-c++ code repository
+c++ code and excercises repository
